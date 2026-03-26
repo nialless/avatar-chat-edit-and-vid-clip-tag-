@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NOVA</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;600&family=Space+Mono&display=swap');
+:root {
+  --bg:#08060f; --surface:#0f0c1a; --panel:#13101f;
+  --border:rgba(180,130,255,0.13); --accent:#b47fff; --accent2:#ff7fbf;
+  --text:#ede8ff; --muted:rgba(237,232,255,0.38);
+  --sb:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;}
+.app{display:flex;flex-direction:column;height:100dvh;}
+
+/* STAGE */
+.stage{flex:1;position:relative;overflow:hidden;min-height:0;
+  background:radial-gradient(ellipse at 50% 90%,rgba(100,50,180,0.22) 0%,transparent 65%),
+             radial-gradient(ellipse at 85% 10%,rgba(255,80,160,0.1) 0%,transparent 50%),
+             var(--bg);}
+#threeCanvas{width:100%;height:100%;display:block;}
+
+/* Clip overlay */
+#clipOverlay{display:none;position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;z-index:6;background:#000;opacity:0;transition:opacity 0.35s;}
+#clipOverlay.vis{display:block;}
+
+/* HUD */
+.name-tag{position:absolute;top:14px;left:16px;font-family:'Space Mono',monospace;
+  font-size:11px;letter-spacing:0.2em;color:var(--accent);opacity:0.85;z-index:3;}
+.mood-badge{position:absolute;top:14px;right:16px;font-size:10px;
+  font-family:'Space Mono',monospace;color:var(--muted);letter-spacing:0.1em;z-index:3;}
+.pips{position:absolute;top:32px;right:16px;display:flex;gap:5px;z-index:3;}
+.pip{width:5px;height:5px;border-radius:50%;background:#2a2040;transition:all 0.3s;}
+.pip.on{background:#7fff9f;box-shadow:0 0 6px #7fff9f;}
+.pip.blink{background:var(--accent2);box-shadow:0 0 6px var(--accent2);animation:pb 1s infinite;}
+@keyframes pb{0%,100%{opacity:1}50%{opacity:0.2}}
+
+/* Setup button */
+.setup-btn{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:10;
+  background:rgba(13,10,24,0.8);backdrop-filter:blur(8px);
+  border:1px solid var(--border);border-radius:20px;padding:5px 16px;
+  font-size:11px;font-family:'Space Mono',monospace;color:var(--muted);
+  letter-spacing:0.12em;cursor:pointer;transition:all 0.2s;}
+.setup-btn:active{color:var(--accent);border-color:var(--accent);}
+
+/* Cam PiP */
+.cam-pip{position:absolute;bottom:90px;right:12px;width:80px;height:60px;
+  border-radius:10px;overflow:hidden;border:1px solid var(--border);background:#000;
+  z-index:5;display:none;}
+.cam-pip.on{display:block;}
+.cam-pip video{width:100%;height:100%;object-fit:cover;}
+
+/* Bubble */
+.bubble-wrap{position:absolute;bottom:12px;left:10px;right:10px;z-index:5;pointer-events:none;}
+.bubble{background:rgba(12,9,22,0.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--border);border-radius:16px 16px 16px 4px;
+  padding:12px 15px;font-size:15px;font-weight:300;line-height:1.55;
+  color:var(--text);min-height:50px;display:flex;align-items:center;gap:8px;}
+.dots{display:flex;gap:4px;align-items:center;}
+.dots span{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:dt 1.2s infinite;}
+.dots span:nth-child(2){animation-delay:.2s}
+.dots span:nth-child(3){animation-delay:.4s}
+@keyframes dt{0%,80%,100%{transform:scale(.6);opacity:.4}40%{transform:scale(1);opacity:1}}
+
+/* Viz bar */
+.viz-bar{position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));
+  transform:scaleX(0);transform-origin:left;transition:transform 0.1s;z-index:3;}
+
+/* CHAT BAR */
+.chat-bar{background:var(--surface);border-top:1px solid var(--border);
+  padding:10px 10px calc(10px + var(--sb));
+  display:flex;gap:8px;align-items:center;flex-shrink:0;z-index:10;}
+.chat-input{flex:1;min-width:0;background:rgba(255,255,255,0.05);
+  border:1px solid var(--border);border-radius:22px;color:var(--text);
+  font-family:'Outfit',sans-serif;font-size:15px;padding:10px 16px;outline:none;
+  transition:border-color 0.2s;}
+.chat-input:focus{border-color:rgba(180,127,255,0.45);}
+.chat-input::placeholder{color:var(--muted);}
+.icon-btn{width:42px;height:42px;flex-shrink:0;border-radius:50%;
+  border:1px solid var(--border);background:transparent;font-size:17px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  transition:all 0.2s;color:var(--muted);}
+.icon-btn:active{transform:scale(0.92);}
+.icon-btn.on{border-color:var(--accent2);color:var(--accent2);background:rgba(255,127,191,0.12);}
+.icon-btn.send{border-color:var(--accent);color:var(--accent);background:rgba(180,127,255,0.1);}
+
+/* DRAWER */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);
+  backdrop-filter:blur(3px);z-index:40;}
+.overlay.open{display:block;}
+.drawer{position:fixed;bottom:0;left:0;right:0;background:var(--surface);
+  border-radius:22px 22px 0 0;border-top:1px solid var(--border);z-index:41;
+  transform:translateY(100%);transition:transform 0.34s cubic-bezier(.32,.72,0,1);
+  max-height:90dvh;overflow-y:auto;padding-bottom:calc(20px + var(--sb));}
+.drawer.open{transform:translateY(0);}
+.drawer::-webkit-scrollbar{display:none;}
+.handle{width:36px;height:4px;background:rgba(255,255,255,0.12);
+  border-radius:2px;margin:12px auto 4px;cursor:pointer;}
+.dsec{padding:14px 16px;border-bottom:1px solid var(--border);}
+.dsec:last-child{border-bottom:none;}
+.dtitle{font-size:10px;font-family:'Space Mono',monospace;color:var(--muted);
+  letter-spacing:0.18em;text-transform:uppercase;margin-bottom:10px;}
+.field{width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border);
+  border-radius:10px;color:var(--text);font-family:'Outfit',sans-serif;
+  font-size:14px;padding:10px 13px;outline:none;transition:border-color 0.2s;
+  margin-bottom:8px;display:block;}
+.field:last-child,.field.last{margin-bottom:0;}
+.field:focus{border-color:rgba(180,127,255,0.4);}
+.field::placeholder{color:var(--muted);}
+.field.nm{color:var(--accent);font-family:'Space Mono',monospace;font-size:13px;}
+textarea.field{resize:none;height:78px;line-height:1.5;font-size:13px;}
+.row{display:flex;gap:8px;}
+.tog{flex:1;padding:10px 6px;border-radius:10px;border:1px solid var(--border);
+  background:rgba(255,255,255,0.03);color:var(--muted);font-family:'Outfit',sans-serif;
+  font-size:13px;cursor:pointer;text-align:center;transition:all 0.2s;}
+.tog:active{transform:scale(0.97);}
+.tog.on{border-color:var(--accent);color:var(--accent);background:rgba(180,127,255,0.1);}
+.fbtn{width:100%;padding:11px;margin-bottom:7px;border-radius:10px;
+  border:1px solid var(--border);background:rgba(255,255,255,0.03);
+  color:var(--text);font-family:'Outfit',sans-serif;font-size:13px;
+  cursor:pointer;text-align:center;transition:all 0.2s;}
+.fbtn:last-child{margin-bottom:0;}
+.fbtn:active{transform:scale(0.98);}
+.fbtn.ac{border-color:var(--accent);color:var(--accent);background:rgba(180,127,255,0.07);}
+
+/* Avatar grid */
+.av-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;}
+.av-slot{aspect-ratio:1;border-radius:10px;border:1px dashed var(--border);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;cursor:pointer;background:rgba(255,255,255,0.02);transition:all 0.2s;}
+.av-slot:active{transform:scale(0.95);}
+.av-slot.loaded{border-style:solid;}
+.av-slot.cur{border-color:var(--accent);background:rgba(180,127,255,0.1);}
+.av-slot .ai{font-size:22px;}
+.av-slot .an{font-size:9px;color:var(--muted);text-align:center;
+  padding:0 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;}
+
+/* Clips */
+.clip-item{background:var(--panel);border:1px solid var(--border);
+  border-radius:10px;padding:9px 12px;margin-bottom:6px;cursor:pointer;
+  transition:border-color 0.2s;display:flex;align-items:center;gap:8px;}
+.clip-item:last-child{margin-bottom:0;}
+.clip-item:active{transform:scale(0.99);}
+.clip-item.tg{border-color:rgba(127,255,255,0.3);animation:tpulse 1.5s infinite;}
+@keyframes tpulse{0%,100%{opacity:1}50%{opacity:0.6}}
+.ci{flex:1;min-width:0;}
+.cn{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ct{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px;}
+.ctag{font-size:9px;padding:1px 7px;border-radius:10px;font-family:'Space Mono',monospace;}
+.ctag.m{background:rgba(255,127,191,0.15);color:var(--accent2);}
+.ctag.t{background:rgba(127,255,255,0.1);color:#7fffff;}
+.ctag.u{background:rgba(255,255,255,0.05);color:var(--muted);}
+.empty-clips{font-size:12px;color:var(--muted);text-align:center;padding:12px 0;}
+input[type=file]{display:none;}
+#camCanvas{display:none;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="stage" id="stage">
+    <canvas id="threeCanvas"></canvas>
+    <video id="clipOverlay" playsinline></video>
+    <div class="name-tag" id="nameTag">NOVA</div>
+    <div class="mood-badge" id="moodBadge">idle</div>
+    <div class="pips">
+      <div class="pip" id="pCam" title="Camera"></div>
+      <div class="pip" id="pMic" title="Mic"></div>
+      <div class="pip" id="pApi" title="API"></div>
+    </div>
+    <button class="setup-btn" id="setupBtn">⚙ setup</button>
+    <div class="cam-pip" id="camPip">
+      <video id="webcamVid" autoplay muted playsinline></video>
+    </div>
+    <div class="bubble-wrap">
+      <div class="bubble" id="bubble">
+        <span id="bubbleTxt" style="opacity:0.4">tap ⚙ setup to connect…</span>
+      </div>
+    </div>
+    <div class="viz-bar" id="vizBar"></div>
+  </div>
+
+  <div class="chat-bar">
+    <button class="icon-btn" id="btnCam">📷</button>
+    <button class="icon-btn" id="btnMic">🎤</button>
+    <input class="chat-input" id="chatIn" placeholder="say something to Nova…" />
+    <button class="icon-btn send" id="sendBtn">➤</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="drawer" id="drawer">
+  <div class="handle" id="drawerHandle"></div>
+
+  <div class="dsec">
+    <div class="dtitle">Anthropic API Key</div>
+    <div class="row">
+      <input class="field last" id="apiIn" type="password" placeholder="sk-ant-api…" style="margin:0;flex:1" />
+      <button class="tog" id="setKeyBtn" style="flex:0;padding:10px 16px;white-space:nowrap">Set</button>
+    </div>
+  </div>
+
+  <div class="dsec">
+    <div class="dtitle">Persona</div>
+    <input class="field nm" id="pName" value="Nova" placeholder="Name" />
+    <textarea class="field last" id="pPrompt">You are Nova, an enthusiastic and playfully witty AI companion. You're upbeat, curious, quick to laugh, and love banter. Notice things from the webcam and comment naturally. Keep responses short (1–3 sentences) and full of energy.</textarea>
+  </div>
+
+  <div class="dsec">
+    <div class="dtitle">Avatar (up to 6 slots)</div>
+    <div class="av-grid" id="avGrid">
+      <div class="av-slot cur" id="avs0"><span class="ai">◈</span><span class="an">Default</span></div>
+      <div class="av-slot" id="avs1"><span class="ai">+</span><span class="an">Add .glb</span></div>
+      <div class="av-slot" id="avs2"><span class="ai">+</span><span class="an">Add .glb</span></div>
+      <div class="av-slot" id="avs3"><span class="ai">+</span><span class="an">Add .glb</span></div>
+      <div class="av-slot" id="avs4"><span class="ai">+</span><span class="an">Add .glb</span></div>
+      <div class="av-slot" id="avs5"><span class="ai">+</span><span class="an">Add .glb</span></div>
+    </div>
+    <input type="file" id="glbIn" accept=".glb,.gltf">
+    <p style="font-size:11px;color:var(--muted);text-align:center">readyplayer.me · mixamo.com · sketchfab.com</p>
+  </div>
+
+  <div class="dsec">
+    <div class="dtitle">Settings</div>
+    <div class="row" style="margin-bottom:0">
+      <button class="tog" id="togTTS">♪ Voice off</button>
+      <button class="tog" id="togReset">⊗ Reset session</button>
+    </div>
+  </div>
+
+  <div class="dsec">
+    <div class="dtitle">Reaction Clips <span id="clipCnt" style="float:right;font-weight:400;font-size:11px">0 clips</span></div>
+    <div class="row" style="margin-bottom:10px">
+      <button class="fbtn ac" id="addClipsBtn" style="margin:0;flex:1">+ Add clips</button>
+      <button class="fbtn" id="tagAllBtn" style="margin:0;flex:1">⊛ Tag all</button>
+    </div>
+    <input type="file" id="clipIn" multiple accept="video/*">
+    <div id="clipList"><div class="empty-clips">no clips yet</div></div>
+  </div>
+</div>
+
+<canvas id="camCanvas"></canvas>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+var S = {
+  key: localStorage.getItem('nova_key') || '',
+  cam: null,
+  mic: false,
+  tts: false,
+  recog: null,
+  clips: [],
+  history: [],
+  busy: false,
+  mood: 'idle',
+  // animation targets (all 0..1)
+  anim: {
+    bobSpeed: 1, bobAmp: 1,
+    headTilt: 0, headNod: 0,
+    shoulderShrug: 0,
+    lean: 0,          // forward/back
+    wave: 0,          // arm wave
+    bounce: 0,        // excited bounce
+    spinY: 0,         // spin on excited
+    mouthOpen: 0,
+    eyeSquint: 0,     // happy squint
+    lookDir: 0,       // -1 left, 1 right
+  },
+  animTargets: {
+    bobSpeed:1, bobAmp:1,
+    headTilt:0, headNod:0,
+    shoulderShrug:0, lean:0,
+    wave:0, bounce:0, spinY:0,
+    mouthOpen:0, eyeSquint:0, lookDir:0
+  },
+  slots: [null,null,null,null,null,null],
+  activeSlot: 0,
+  mesh: null,
+  mixer: null,
+  avPendingSlot: 1,
+  glbLoaderReady: false,
+};
+
+if (S.key) {
+  document.getElementById('apiIn').value = '••••••••';
+  setPip('pApi', true);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WIRE UP ALL EVENTS HERE (no inline onclick that could fail)
+// ═══════════════════════════════════════════════════════════════
+document.getElementById('setupBtn').addEventListener('click', openDrawer);
+document.getElementById('drawerHandle').addEventListener('click', closeDrawer);
+document.getElementById('overlay').addEventListener('click', closeDrawer);
+document.getElementById('setKeyBtn').addEventListener('click', saveKey);
+document.getElementById('sendBtn').addEventListener('click', sendMsg);
+document.getElementById('btnCam').addEventListener('click', toggleCam);
+document.getElementById('btnMic').addEventListener('click', toggleMic);
+document.getElementById('togTTS').addEventListener('click', toggleTTS);
+document.getElementById('togReset').addEventListener('click', clearSession);
+document.getElementById('addClipsBtn').addEventListener('click', function(){ document.getElementById('clipIn').click(); });
+document.getElementById('tagAllBtn').addEventListener('click', tagAll);
+document.getElementById('clipIn').addEventListener('change', function(){ addClips(this.files); this.value=''; });
+document.getElementById('glbIn').addEventListener('change', function(){ if(this.files[0]) loadGLBIntoSlot(this.files[0], S.avPendingSlot); this.value=''; });
+document.getElementById('chatIn').addEventListener('keydown', function(e){ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();} });
+
+// Avatar slot clicks
+for (var i=0; i<6; i++) {
+  (function(idx){
+    document.getElementById('avs'+idx).addEventListener('click', function(){
+      if (idx === 0 || S.slots[idx]) { switchAvatar(idx); }
+      else { S.avPendingSlot = idx; document.getElementById('glbIn').click(); }
+    });
+  })(i);
+}
+
+function openDrawer() {
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// THREE.JS SCENE
+// ═══════════════════════════════════════════════════════════════
+var canvas3 = document.getElementById('threeCanvas');
+var renderer = new THREE.WebGLRenderer({ canvas: canvas3, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setClearColor(0x000000, 0);
+
+var scene = new THREE.Scene();
+var cam3 = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+cam3.position.set(0, 1.1, 3.2);
+cam3.lookAt(0, 0.7, 0);
+
+var ambL = new THREE.AmbientLight(0xb090ff, 0.6); scene.add(ambL);
+var keyL = new THREE.DirectionalLight(0xff90d0, 1.2); keyL.position.set(1,3,2); scene.add(keyL);
+var rimL = new THREE.DirectionalLight(0x90d0ff, 0.8); rimL.position.set(-2,1,-1); scene.add(rimL);
+var fillL = new THREE.PointLight(0xb47fff, 0.4, 8); fillL.position.set(0,2,1); scene.add(fillL);
+
+function resizeRenderer() {
+  var s = document.getElementById('stage');
+  renderer.setSize(s.clientWidth, s.clientHeight);
+  cam3.aspect = s.clientWidth / s.clientHeight;
+  cam3.updateProjectionMatrix();
+}
+resizeRenderer();
+window.addEventListener('resize', resizeRenderer);
+
+// Build placeholder avatar parts as named objects for animation
+var parts = {}; // named sub-meshes
+
+function buildPlaceholder() {
+  var g = new THREE.Group();
+  g.name = 'avatar';
+
+  function makeMesh(geo, col, px, py, pz, name) {
+    var mat = new THREE.MeshPhongMaterial({ color: col, shininess: 55 });
+    var m = new THREE.Mesh(geo, mat);
+    m.position.set(px, py, pz);
+    if (name) { m.name = name; parts[name] = m; }
+    g.add(m);
+    return m;
+  }
+
+  // Body
+  makeMesh(new THREE.CylinderGeometry(0.17,0.21,0.65,32), 0x9060d0, 0,0.55,0, 'body');
+
+  // Neck pivot group
+  var neckGroup = new THREE.Group(); neckGroup.name='neckGroup'; neckGroup.position.set(0,0.92,0); g.add(neckGroup); parts.neckGroup = neckGroup;
+  var headGeo = new THREE.SphereGeometry(0.21,32,32);
+  var headMesh = new THREE.Mesh(headGeo, new THREE.MeshPhongMaterial({color:0xf0c8a0,shininess:40}));
+  headMesh.position.set(0,0.28,0); headMesh.name='head'; neckGroup.add(headMesh); parts.head = headMesh;
+
+  // Hair on neck group
+  var hairM = new THREE.Mesh(new THREE.SphereGeometry(0.23,32,16,0,Math.PI*2,0,Math.PI*0.55), new THREE.MeshPhongMaterial({color:0x1a0a2e,side:THREE.DoubleSide}));
+  hairM.position.set(0,0.28,0); neckGroup.add(hairM);
+
+  // Eyes (on head, relative pos)
+  [-0.075,0.075].forEach(function(x,i) {
+    var eye = new THREE.Mesh(new THREE.SphereGeometry(0.026,16,16), new THREE.MeshPhongMaterial({color:0x220044}));
+    eye.position.set(x,0.3,0.19); neckGroup.add(eye);
+    var iris = new THREE.Mesh(new THREE.SphereGeometry(0.016,16,16), new THREE.MeshPhongMaterial({color:0xb47fff,emissive:0x7040c0}));
+    iris.position.set(x,0.3,0.20); iris.name=i===0?'irisL':'irisR'; neckGroup.add(iris); parts[iris.name]=iris;
+  });
+
+  // Mouth
+  var mouthMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.09,0.022), new THREE.MeshPhongMaterial({color:0xcc5580,side:THREE.DoubleSide}));
+  mouthMesh.position.set(0,0.17,0.20); mouthMesh.name='mouth'; neckGroup.add(mouthMesh); parts.mouth = mouthMesh;
+
+  // Shoulder pivot groups
+  [-1,1].forEach(function(side) {
+    var shoulderGroup = new THREE.Group();
+    shoulderGroup.name = side<0?'shoulderL':'shoulderR';
+    shoulderGroup.position.set(side*0.22, 0.75, 0);
+    g.add(shoulderGroup); parts[shoulderGroup.name] = shoulderGroup;
+
+    var arm = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.04,0.5,16), new THREE.MeshPhongMaterial({color:0x9060d0}));
+    arm.position.set(side*0.12, -0.25, 0);
+    arm.rotation.z = side * 0.28;
+    arm.name = side<0?'armL':'armR';
+    shoulderGroup.add(arm); parts[arm.name] = arm;
+
+    // Hand
+    var hand = new THREE.Mesh(new THREE.SphereGeometry(0.055,12,12), new THREE.MeshPhongMaterial({color:0xf0c8a0}));
+    hand.position.set(side*0.21,-0.50,0); shoulderGroup.add(hand);
+  });
+
+  // Hip group (for lean)
+  var hipGroup = new THREE.Group(); hipGroup.name='hipGroup'; hipGroup.position.set(0,0,0); g.add(hipGroup); parts.hipGroup=hipGroup;
+  [-0.1,0.1].forEach(function(x,i) {
+    var leg = new THREE.Mesh(new THREE.CylinderGeometry(0.065,0.05,0.65,16), new THREE.MeshPhongMaterial({color:0x2a1050}));
+    leg.position.set(x,-0.13,0); hipGroup.add(leg);
+  });
+
+  // Shadow disc
+  var disc = new THREE.Mesh(new THREE.CircleGeometry(0.32,32), new THREE.MeshBasicMaterial({color:0,transparent:true,opacity:0.18}));
+  disc.rotation.x=-Math.PI/2; disc.position.y=-0.45; g.add(disc);
+
+  return g;
+}
+
+S.mesh = buildPlaceholder();
+scene.add(S.mesh);
+
+// ═══════════════════════════════════════════════════════════════
+// ANIMATION LOOP + INTELLIGENT AVATAR ANIMATION
+// ═══════════════════════════════════════════════════════════════
+var clock = new THREE.Clock();
+var t = 0;
+
+// Mood → animation target presets
+var MOOD_ANIM = {
+  idle:      { bobSpeed:1,   bobAmp:1,   headTilt:0,    headNod:0,   shoulderShrug:0, lean:0,    wave:0,   bounce:0, spinY:0, eyeSquint:0, lookDir:0 },
+  happy:     { bobSpeed:1.2, bobAmp:1.2, headTilt:0.15, headNod:0,   shoulderShrug:0, lean:0.05, wave:0,   bounce:0, spinY:0, eyeSquint:1, lookDir:0 },
+  excited:   { bobSpeed:2,   bobAmp:2,   headTilt:0.1,  headNod:0.2, shoulderShrug:0, lean:0.1,  wave:1,   bounce:1, spinY:0, eyeSquint:1, lookDir:0 },
+  curious:   { bobSpeed:0.8, bobAmp:0.8, headTilt:0.35, headNod:0,   shoulderShrug:0, lean:0.15, wave:0,   bounce:0, spinY:0, eyeSquint:0, lookDir:1 },
+  thinking:  { bobSpeed:0.5, bobAmp:0.6, headTilt:0.2,  headNod:0,   shoulderShrug:0, lean:-0.05,wave:0,   bounce:0, spinY:0, eyeSquint:0, lookDir:-1 },
+  surprised: { bobSpeed:0.3, bobAmp:0.5, headTilt:0,    headNod:0.4, shoulderShrug:1, lean:-0.2, wave:0,   bounce:0, spinY:0, eyeSquint:0, lookDir:0 },
+  playful:   { bobSpeed:1.5, bobAmp:1.5, headTilt:0.25, headNod:0,   shoulderShrug:0, lean:0.08, wave:0.5, bounce:0, spinY:0, eyeSquint:0.5,lookDir:0 },
+  calm:      { bobSpeed:0.6, bobAmp:0.7, headTilt:0.05, headNod:0,   shoulderShrug:0, lean:0,    wave:0,   bounce:0, spinY:0, eyeSquint:0, lookDir:0 },
+};
+
+function lerp(a,b,f){ return a+(b-a)*f; }
+
+function applyAnimTargets(mood) {
+  var preset = MOOD_ANIM[mood] || MOOD_ANIM.idle;
+  Object.keys(preset).forEach(function(k){ S.animTargets[k] = preset[k]; });
+}
+
+function smoothAnim(dt) {
+  var speed = 2 * dt;
+  var a = S.anim, at = S.animTargets;
+  Object.keys(at).forEach(function(k){ a[k] = lerp(a[k], at[k], speed); });
+}
+
+(function loop() {
+  requestAnimationFrame(loop);
+  var dt = clock.getDelta();
+  t += dt;
+
+  if (S.mixer) S.mixer.update(dt);
+  smoothAnim(dt);
+
+  if (S.mesh && S.mesh.name === 'avatar') {
+    var a = S.anim;
+
+    // Root bob
+    var bobFreq = 0.8 * a.bobSpeed;
+    S.mesh.position.y = Math.sin(t * bobFreq) * 0.012 * a.bobAmp;
+    S.mesh.position.y += a.bounce * Math.abs(Math.sin(t * 5)) * 0.04;
+
+    // Gentle idle sway
+    S.mesh.rotation.y = Math.sin(t * 0.3) * 0.04 + a.spinY * Math.sin(t * 2) * 0.08;
+
+    // Neck group (head tilt, nod, look direction)
+    if (parts.neckGroup) {
+      parts.neckGroup.rotation.z = a.headTilt * Math.sin(t*0.4+1) * 0.6 + (S.anim.headTilt * 0.4);
+      parts.neckGroup.rotation.x = a.headNod * -0.3 + Math.sin(t*0.7)*0.015;
+      parts.neckGroup.rotation.y = a.lookDir * 0.25 + Math.sin(t*0.2)*0.03;
+    }
+
+    // Shoulder shrug
+    if (parts.shoulderL) parts.shoulderL.position.y = 0.75 + a.shoulderShrug * 0.06;
+    if (parts.shoulderR) parts.shoulderR.position.y = 0.75 + a.shoulderShrug * 0.06;
+
+    // Wave (right arm)
+    if (parts.shoulderR) {
+      parts.shoulderR.rotation.z = a.wave * Math.sin(t * 4) * 0.4;
+      parts.shoulderR.rotation.x = a.wave * -0.3;
+    }
+
+    // Lean (forward)
+    if (parts.body) {
+      S.mesh.rotation.x = a.lean * 0.12;
+    }
+
+    // Arm idle sway
+    if (parts.shoulderL) parts.shoulderL.rotation.z = -0.05 + Math.sin(t*0.7)*0.04 * a.bobAmp;
+    if (parts.shoulderR && a.wave < 0.1) parts.shoulderR.rotation.z = 0.05 - Math.sin(t*0.7+1)*0.04 * a.bobAmp;
+
+    // Mouth (lip sync)
+    if (parts.mouth) {
+      parts.mouth.scale.y = 1 + a.mouthOpen * 9;
+      parts.mouth.scale.x = 1 + a.mouthOpen * 2;
+    }
+
+    // Eye squint (happy)
+    if (parts.irisL) { parts.irisL.scale.y = 1 - a.eyeSquint * 0.35; }
+    if (parts.irisR) { parts.irisR.scale.y = 1 - a.eyeSquint * 0.35; }
+
+    // Blink every ~4s
+    var blinkPhase = Math.sin(t * 0.8);
+    if (blinkPhase > 0.998) {
+      if (parts.irisL) parts.irisL.scale.y *= 0.1;
+      if (parts.irisR) parts.irisR.scale.y *= 0.1;
+    }
+  }
+
+  renderer.render(scene, cam3);
+})();
+
+// ═══════════════════════════════════════════════════════════════
+// MOOD → SCENE LIGHTING + ANIMATION
+// ═══════════════════════════════════════════════════════════════
+var MOOD_LIGHTS = {
+  happy:    { k:0xffb060, r:0xff90d0, f:0xffcc88 },
+  excited:  { k:0xff60a0, r:0xffb060, f:0xff80cc },
+  curious:  { k:0x90d0ff, r:0xb47fff, f:0x90b0ff },
+  thinking: { k:0x7090d0, r:0x9060b0, f:0x6080c0 },
+  surprised:{ k:0xffffff, r:0xff90d0, f:0xffffcc },
+  playful:  { k:0xff80c0, r:0x80c0ff, f:0xff99dd },
+  calm:     { k:0xa0c8e0, r:0x90b0d0, f:0x88aabb },
+  idle:     { k:0xff90d0, r:0x90d0ff, f:0xb47fff },
+};
+
+function setMood(mood) {
+  S.mood = mood;
+  document.getElementById('moodBadge').textContent = mood;
+  var c = MOOD_LIGHTS[mood] || MOOD_LIGHTS.idle;
+  keyL.color.setHex(c.k);
+  rimL.color.setHex(c.r);
+  fillL.color.setHex(c.f);
+  applyAnimTargets(mood);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AVATAR SLOTS
+// ═══════════════════════════════════════════════════════════════
+function loadGLTFLoader(cb) {
+  if (S.glbLoaderReady) { cb(); return; }
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
+  s.onload = function() { S.glbLoaderReady = true; cb(); };
+  s.onerror = function() { alert('Could not load GLTFLoader. Check your internet connection.'); };
+  document.head.appendChild(s);
+}
+
+function loadGLBIntoSlot(file, slot) {
+  var el = document.getElementById('avs' + slot);
+  el.innerHTML = '<span class="ai">⟳</span><span class="an">loading…</span>';
+  el.classList.add('loaded');
+  var url = URL.createObjectURL(file);
+  var name = file.name.replace(/\.[^.]+$/, '');
+  loadGLTFLoader(function() {
+    new THREE.GLTFLoader().load(url, function(gltf) {
+      S.slots[slot] = { url:url, name:name, gltf:gltf };
+      el.innerHTML = '<span class="ai">◈</span><span class="an">' + name + '</span>';
+      switchAvatar(slot);
+    }, undefined, function() {
+      el.innerHTML = '<span class="ai">✕</span><span class="an">error</span>';
+    });
+  });
+}
+
+function switchAvatar(slot) {
+  for (var i=0; i<6; i++) {
+    var el = document.getElementById('avs'+i);
+    if (el) el.classList.toggle('cur', i===slot);
+  }
+  S.activeSlot = slot;
+  if (S.mesh) { scene.remove(S.mesh); S.mesh = null; }
+  if (S.mixer) { S.mixer.stopAllAction(); S.mixer = null; }
+  parts = {};
+
+  if (slot === 0 || !S.slots[slot]) {
+    S.mesh = buildPlaceholder();
+    scene.add(S.mesh);
+    return;
+  }
+
+  var gltf = S.slots[slot].gltf;
+  var model = gltf.scene;
+  model.name = 'glb';
+  var box = new THREE.Box3().setFromObject(model);
+  var sz = box.getSize(new THREE.Vector3());
+  var sc = 1.8 / sz.y;
+  model.scale.setScalar(sc);
+  var ctr = box.getCenter(new THREE.Vector3());
+  model.position.set(-ctr.x*sc, -box.min.y*sc, -ctr.z*sc);
+  scene.add(model);
+  S.mesh = model;
+
+  if (gltf.animations && gltf.animations.length) {
+    S.mixer = new THREE.AnimationMixer(model);
+    var idle = gltf.animations.find(function(a){ return a.name.toLowerCase().includes('idle'); }) || gltf.animations[0];
+    S.mixer.clipAction(idle).play();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WEBCAM
+// ═══════════════════════════════════════════════════════════════
+function toggleCam() {
+  if (S.cam) {
+    S.cam.getTracks().forEach(function(t){ t.stop(); });
+    S.cam = null;
+    document.getElementById('camPip').classList.remove('on');
+    document.getElementById('btnCam').classList.remove('on');
+    setPip('pCam', false);
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({ video:{width:640,height:360}, audio:false })
+    .then(function(stream) {
+      S.cam = stream;
+      document.getElementById('webcamVid').srcObject = stream;
+      document.getElementById('camPip').classList.add('on');
+      document.getElementById('btnCam').classList.add('on');
+      setPip('pCam', true);
+    })
+    .catch(function(e) { alert('Camera error: ' + e.message); });
+}
+
+function captureFrame() {
+  var v = document.getElementById('webcamVid');
+  var c = document.getElementById('camCanvas');
+  c.width = 640; c.height = 360;
+  c.getContext('2d').drawImage(v, 0, 0, 640, 360);
+  return c.toDataURL('image/jpeg', 0.7).split(',')[1];
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MIC
+// ═══════════════════════════════════════════════════════════════
+function toggleMic() {
+  if (S.mic) {
+    if (S.recog) { S.recog.stop(); S.recog = null; }
+    S.mic = false;
+    document.getElementById('btnMic').classList.remove('on');
+    setPip('pMic', false);
+    return;
+  }
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('Speech recognition not supported in this browser.'); return; }
+  S.recog = new SR();
+  S.recog.continuous = true;
+  S.recog.interimResults = false;
+  S.recog.onresult = function(e) {
+    var txt = Array.from(e.results).slice(e.resultIndex).map(function(r){ return r[0].transcript; }).join(' ').trim();
+    if (txt && !S.busy) {
+      document.getElementById('chatIn').value = txt;
+      sendMsg();
+    }
+  };
+  S.recog.onend = function() { if (S.mic) S.recog.start(); };
+  S.recog.onerror = function(e) { console.warn('Speech error:', e.error); };
+  S.recog.start();
+  S.mic = true;
+  document.getElementById('btnMic').classList.add('on');
+  setPip('pMic', true, 'blink');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TTS + LIP SYNC
+// ═══════════════════════════════════════════════════════════════
+function toggleTTS() {
+  S.tts = !S.tts;
+  var b = document.getElementById('togTTS');
+  b.textContent = S.tts ? '♪ Voice on' : '♪ Voice off';
+  b.classList.toggle('on', S.tts);
+}
+
+var lipInterval = null;
+function speak(text) {
+  if (!S.tts || !text) return;
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  var utt = new SpeechSynthesisUtterance(text);
+  utt.rate = 1.05; utt.pitch = 1.1;
+  utt.onstart = function() {
+    lipInterval = setInterval(function(){
+      S.animTargets.mouthOpen = 0.3 + Math.random() * 0.7;
+    }, 75);
+    document.getElementById('vizBar').style.transform = 'scaleX(1)';
+  };
+  utt.onend = function() {
+    clearInterval(lipInterval); lipInterval = null;
+    S.animTargets.mouthOpen = 0;
+    document.getElementById('vizBar').style.transform = 'scaleX(0)';
+  };
+  window.speechSynthesis.speak(utt);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SEND TO NOVA (Claude API)
+// ═══════════════════════════════════════════════════════════════
+function sendMsg() {
+  var inp = document.getElementById('chatIn');
+  var txt = inp.value.trim();
+  if (!txt) return;
+  inp.value = '';
+  closeDrawer();
+  nova(txt, S.cam ? captureFrame() : null);
+}
+
+function nova(userText, frameB64) {
+  if (!S.key) { showBubble('Add your API key in ⚙ setup first.'); return; }
+  if (S.busy) return;
+  S.busy = true;
+  setMood('thinking');
+
+  var name = document.getElementById('pName').value || 'Nova';
+  document.getElementById('nameTag').textContent = name.toUpperCase();
+
+  var clipCtx = S.clips.length
+    ? 'Reaction clips:\n' + S.clips.map(function(c){ return 'ID:'+c.id+' | "'+c.name+'" | moods:['+c.moods+'] | tags:['+c.tags+']'; }).join('\n')
+    : '';
+
+  var sys = document.getElementById('pPrompt').value + '\n\n'
+    + (clipCtx ? clipCtx + '\n\nIf a clip truly fits the moment, end your response with exactly [CLIP:id]. Never mention the tag.\n\n' : '')
+    + 'You must end EVERY response with [MOOD:word] where word is one of: happy, excited, curious, thinking, surprised, playful, calm, idle.\n'
+    + 'Choose the mood that best fits your emotional state in this moment.';
+
+  var content = [];
+  if (frameB64) content.push({ type:'image', source:{ type:'base64', media_type:'image/jpeg', data:frameB64 } });
+  content.push({ type:'text', text: userText });
+
+  showBubble(null); // show thinking dots
+
+  var messages = S.history.concat([{ role:'user', content: content }]);
+
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': S.key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 300,
+      system: sys,
+      messages: messages
+    })
+  })
+  .then(function(res){ return res.json(); })
+  .then(function(data) {
+    if (data.error) throw new Error(data.error.message);
+    var txt = data.content[0].text;
+
+    // Extract mood tag
+    var moodMatch = txt.match(/\[MOOD:(\w+)\]/i);
+    if (moodMatch) {
+      setMood(moodMatch[1].toLowerCase());
+      txt = txt.replace(/\[MOOD:\w+\]/gi, '').trim();
+    }
+
+    // Extract clip tag
+    var clipMatch = txt.match(/\[CLIP:([^\]]+)\]/i);
+    if (clipMatch) {
+      playClip(clipMatch[1].trim());
+      txt = txt.replace(/\[CLIP:[^\]]+\]/gi, '').trim();
+    }
+
+    // Update history (keep last 16 turns)
+    S.history.push({ role:'user', content:[{ type:'text', text:userText }] });
+    S.history.push({ role:'assistant', content: txt });
+    if (S.history.length > 16) S.history = S.history.slice(-16);
+
+    showBubble(txt);
+    speak(txt);
+    setPip('pApi', true);
+  })
+  .catch(function(e) {
+    showBubble('Error: ' + e.message);
+    setMood('idle');
+    console.error(e);
+  })
+  .finally(function() {
+    S.busy = false;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CLIP LIBRARY
+// ═══════════════════════════════════════════════════════════════
+function addClips(files) {
+  Array.from(files).forEach(function(f) {
+    S.clips.push({
+      id: 'c' + Date.now() + Math.random().toString(36).slice(2,5),
+      name: f.name.replace(/\.[^.]+$/, ''),
+      file: f,
+      url: URL.createObjectURL(f),
+      tags: [], moods: [], description: 'untagged'
+    });
+  });
+  renderClips();
+}
+
+function renderClips() {
+  document.getElementById('clipCnt').textContent = S.clips.length + ' clips';
+  var el = document.getElementById('clipList');
+  if (!S.clips.length) {
+    el.innerHTML = '<div class="empty-clips">no clips yet</div>';
+    return;
+  }
+  el.innerHTML = S.clips.map(function(c) {
+    return '<div class="clip-item' + (c._t?' tg':'') + '" data-id="' + c.id + '">'
+      + '<span style="font-size:18px">▶</span>'
+      + '<div class="ci"><div class="cn">' + c.name + '</div>'
+      + '<div class="ct">'
+      + c.moods.map(function(m){ return '<span class="ctag m">'+m+'</span>'; }).join('')
+      + c.tags.slice(0,3).map(function(t){ return '<span class="ctag t">'+t+'</span>'; }).join('')
+      + (!c.moods.length&&!c.tags.length?'<span class="ctag u">untagged</span>':'')
+      + '</div></div></div>';
+  }).join('');
+
+  // Wire click events on clip items
+  el.querySelectorAll('.clip-item').forEach(function(el) {
+    el.addEventListener('click', function(){ playClip(this.dataset.id); });
+  });
+}
+
+function tagAll() {
+  if (!S.key) { alert('Set API key first'); return; }
+  var untagged = S.clips.filter(function(c){ return !c.moods.length && !c.tags.length; });
+  if (!untagged.length) { alert('All clips already tagged!'); return; }
+  // Tag sequentially
+  var promise = Promise.resolve();
+  untagged.forEach(function(c) {
+    promise = promise.then(function(){ return tagClip(c); });
+  });
+}
+
+function tagClip(clip) {
+  clip._t = true; renderClips();
+  return new Promise(function(resolve) {
+    // Try to extract a frame
+    var framePromise = new Promise(function(res) {
+      var v = document.createElement('video');
+      v.src = clip.url; v.muted = true; v.currentTime = 0.5;
+      v.onloadeddata = function() {
+        var c = document.createElement('canvas'); c.width=320; c.height=180;
+        c.getContext('2d').drawImage(v,0,0,320,180);
+        res(c.toDataURL('image/jpeg',0.6).split(',')[1]);
+      };
+      v.onerror = function(){ res(null); };
+      setTimeout(function(){ res(null); }, 4000);
+    });
+
+    framePromise.then(function(fb) {
+      var cnt = [];
+      if (fb) cnt.push({ type:'image', source:{ type:'base64', media_type:'image/jpeg', data:fb } });
+      cnt.push({ type:'text', text:'Tag video clip "'+clip.name+'". Reply ONLY with raw JSON, no markdown, no extra text:\n{"description":"...","moods":["..."],"tags":["...","...","..."]}' });
+
+      fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':S.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:150, messages:[{role:'user',content:cnt}] })
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(d) {
+        var raw = d.content[0].text.replace(/```json|```/g,'').trim();
+        var p = JSON.parse(raw);
+        clip.description = p.description || clip.name;
+        clip.moods = p.moods || [];
+        clip.tags = p.tags || [];
+      })
+      .catch(function() { clip.moods=[]; clip.tags=['unprocessed']; })
+      .finally(function() { clip._t=false; renderClips(); resolve(); });
+    });
+  });
+}
+
+function playClip(id) {
+  var clip = S.clips.find(function(c){ return c.id===id; });
+  if (!clip) return;
+  var ov = document.getElementById('clipOverlay');
+  ov.src = clip.url;
+  ov.classList.add('vis');
+  ov.style.opacity = '0';
+  ov.play().then(function(){
+    ov.style.opacity = '1';
+  }).catch(function(){});
+  ov.onended = function() {
+    ov.style.opacity = '0';
+    setTimeout(function(){ ov.classList.remove('vis'); ov.src=''; }, 350);
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BUBBLE TYPEWRITER
+// ═══════════════════════════════════════════════════════════════
+var bubbleTimer = null;
+function showBubble(text) {
+  if (bubbleTimer) { clearInterval(bubbleTimer); bubbleTimer=null; }
+  var b = document.getElementById('bubble');
+  if (!text) {
+    b.innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
+    return;
+  }
+  b.innerHTML = '';
+  var sp = document.createElement('span');
+  b.appendChild(sp);
+  var i = 0;
+  bubbleTimer = setInterval(function() {
+    sp.textContent += text[i] || '';
+    i++;
+    if (i >= text.length) { clearInterval(bubbleTimer); bubbleTimer=null; }
+  }, 14);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// UTILITY
+// ═══════════════════════════════════════════════════════════════
+function setPip(id, on, type) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var cls = 'pip';
+  if (on) { cls += (type === 'blink' ? ' blink' : ' on'); }
+  el.className = cls;
+}
+
+function saveKey() {
+  var v = document.getElementById('apiIn').value.trim();
+  if (!v || v.indexOf('•') === 0) return;
+  S.key = v;
+  localStorage.setItem('nova_key', v);
+  document.getElementById('apiIn').value = '••••••••';
+  setPip('pApi', true);
+  showBubble('API key saved! Say something to start.');
+}
+
+function clearSession() {
+  S.history = [];
+  showBubble('Session cleared — let\'s start fresh!');
+  setMood('idle');
+}
+</script>
+</body>
+</html>
