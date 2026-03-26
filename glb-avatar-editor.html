@@ -5,270 +5,211 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>AVATARFORGE</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap');
-
 :root {
-  --bg: #080b10;
-  --panel: #0d1117;
-  --panel2: #111820;
-  --border: #1e2d3d;
-  --accent: #00e5ff;
-  --accent2: #7c3aed;
-  --text: #c9d1d9;
-  --dim: #7a8fa8;
-  --danger: #ef4444;
-  --success: #10b981;
-  --glow: 0 0 16px rgba(0,229,255,0.35);
-  --tab-h: 60px;
-  --header-h: 48px;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --bg:#080b10; --panel:#0d1117; --panel2:#111820; --border:#1e2d3d;
+  --accent:#00e5ff; --accent2:#7c3aed; --text:#c9d1d9; --dim:#7a8fa8;
+  --danger:#ef4444; --success:#10b981; --warn:#f59e0b;
+  --glow:0 0 16px rgba(0,229,255,0.35);
+  --tab-h:60px; --header-h:48px; --safe-bottom:env(safe-area-inset-bottom,0px);
 }
-
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-html, body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; height:100%; width:100%; overflow:hidden; position:fixed; }
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;height:100%;width:100%;overflow:hidden;position:fixed;}
 
 /* HEADER */
-header {
-  position:fixed; top:0; left:0; right:0;
-  height:var(--header-h);
-  background:var(--panel); border-bottom:1px solid var(--border);
-  display:flex; align-items:center; justify-content:space-between;
-  padding:0 14px; z-index:100;
-}
-.logo { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:4px; color:var(--accent); text-shadow:var(--glow); }
-.logo sub { font-family:'Space Mono',monospace; font-size:8px; color:var(--dim); letter-spacing:1px; vertical-align:middle; margin-left:6px; }
-.header-btns { display:flex; gap:6px; }
-.hbtn { padding:5px 10px; border:1px solid var(--border); background:transparent; color:var(--dim); font-family:'Space Mono',monospace; font-size:9px; cursor:pointer; letter-spacing:1px; touch-action:manipulation; }
-.hbtn:active { border-color:var(--accent); color:var(--accent); }
-.hbtn.primary { background:var(--accent); color:#000; border-color:var(--accent); font-weight:700; }
+header{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 12px;z-index:100;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:4px;color:var(--accent);text-shadow:var(--glow);}
+.logo sub{font-family:'Space Mono',monospace;font-size:8px;color:var(--dim);letter-spacing:1px;vertical-align:middle;margin-left:6px;}
+.hbtns{display:flex;gap:5px;align-items:center;}
+.hbtn{padding:5px 9px;border:1px solid var(--border);background:transparent;color:var(--dim);font-family:'Space Mono',monospace;font-size:9px;cursor:pointer;letter-spacing:1px;touch-action:manipulation;}
+.hbtn:active{border-color:var(--accent);color:var(--accent);}
+.hbtn.primary{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700;}
+.key-dot{width:8px;height:8px;border-radius:50%;background:var(--danger);cursor:pointer;flex-shrink:0;touch-action:manipulation;}
+.key-dot.set{background:var(--success);}
 
 /* CONTENT */
-.content {
-  position:fixed; top:var(--header-h); left:0; right:0;
-  bottom:calc(var(--tab-h) + var(--safe-bottom));
-  overflow:hidden;
-}
+.content{position:fixed;top:var(--header-h);left:0;right:0;bottom:calc(var(--tab-h) + var(--safe-bottom));overflow:hidden;}
 
 /* TAB PANELS */
-.tab-panel { position:absolute; inset:0; overflow-y:auto; overflow-x:hidden; display:none; -webkit-overflow-scrolling:touch; }
-.tab-panel.active { display:block; }
+.tab-panel{position:absolute;inset:0;display:none;overflow:hidden;}
+.tab-panel.active{display:block;}
+#tab-controls,#tab-sculpt,#tab-ai{overflow-y:auto;-webkit-overflow-scrolling:touch;}
 
 /* VIEWPORT */
-#tab-view { background:radial-gradient(ellipse at 50% 40%,#0d1a2a 0%,var(--bg) 70%); overflow:hidden; }
-#three-canvas { width:100%; height:100%; display:block; touch-action:none; }
-.grid-overlay { position:absolute; inset:0; background-image:linear-gradient(rgba(0,229,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.025) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; }
-#drop-prompt { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; pointer-events:none; width:90%; }
-#drop-prompt .big { font-family:'Bebas Neue',sans-serif; font-size:clamp(26px,8vw,48px); color:var(--dim); letter-spacing:4px; }
-#drop-prompt .sub { font-size:11px; color:var(--dim); margin-top:6px; font-family:'Space Mono',monospace; }
-#drop-prompt .load-btn { margin-top:16px; display:inline-block; padding:10px 24px; border:1px solid var(--accent); color:var(--accent); font-family:'Space Mono',monospace; font-size:11px; cursor:pointer; letter-spacing:2px; pointer-events:all; touch-action:manipulation; }
+#tab-view{background:radial-gradient(ellipse at 50% 40%,#0d1a2a 0%,var(--bg) 70%);}
+#three-canvas{width:100%;height:100%;display:block;touch-action:none;}
+.grid-overlay{position:absolute;inset:0;background-image:linear-gradient(rgba(0,229,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.02) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
 
-.vp-toolbar { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); display:flex; gap:3px; background:rgba(13,17,23,0.88); border:1px solid var(--border); padding:4px; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
-.vtool { width:38px; height:38px; background:transparent; border:1px solid transparent; color:var(--dim); font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center; touch-action:manipulation; }
-.vtool.active { color:var(--accent); border-color:var(--accent); background:rgba(0,229,255,0.08); }
-.vtool:active { opacity:0.7; }
-.vtsep { width:1px; background:var(--border); margin:4px 2px; }
+/* DROP PROMPT */
+#drop-prompt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;width:90%;}
+#drop-prompt .big{font-family:'Bebas Neue',sans-serif;font-size:clamp(24px,7vw,44px);color:var(--dim);letter-spacing:4px;}
+#drop-prompt .sub{font-size:11px;color:var(--dim);margin-top:6px;font-family:'Space Mono',monospace;}
+#drop-prompt .lbtn{margin-top:14px;display:inline-block;padding:10px 22px;border:1px solid var(--accent);color:var(--accent);font-family:'Space Mono',monospace;font-size:11px;cursor:pointer;letter-spacing:2px;pointer-events:all;touch-action:manipulation;}
 
-.vp-status { position:absolute; top:8px; left:10px; font-family:'Space Mono',monospace; font-size:9px; color:var(--dim); display:flex; align-items:center; gap:6px; background:rgba(13,17,23,0.7); padding:4px 8px; border:1px solid var(--border); }
-.sdot { width:5px; height:5px; border-radius:50%; background:var(--success); animation:pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+/* CAMERA TOOLBAR */
+.cam-bar{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:3px;background:rgba(13,17,23,0.9);border:1px solid var(--border);padding:4px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
+.ctool{width:38px;height:38px;background:transparent;border:1px solid transparent;color:var(--dim);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation;}
+.ctool.active{color:var(--accent);border-color:var(--accent);background:rgba(0,229,255,0.08);}
+.ctool:active{opacity:0.7;}
+.ctsep{width:1px;background:var(--border);margin:4px 2px;}
 
-/* MANIPULATION TOOLBAR — left side vertical */
-.manip-toolbar {
-  position:absolute; left:8px; top:50%; transform:translateY(-50%);
-  display:flex; flex-direction:column; gap:3px;
-  background:rgba(13,17,23,0.88); border:1px solid var(--border);
-  padding:4px; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-}
-.mtool {
-  width:42px; height:42px; background:transparent; border:1px solid transparent;
-  color:var(--dim); font-size:18px; cursor:pointer;
-  display:flex; align-items:center; justify-content:center; flex-direction:column;
-  touch-action:manipulation; transition:all 0.15s; gap:1px;
-}
-.mtool span.mlabel { font-family:'Space Mono',monospace; font-size:7px; letter-spacing:0.5px; line-height:1; }
-.mtool.active { color:var(--accent); border-color:var(--accent); background:rgba(0,229,255,0.1); }
-.mtool:active { opacity:0.7; }
-.mtsep { height:1px; background:var(--border); margin:2px 0; }
+/* SCULPT TOOLBAR — LEFT */
+.sculpt-bar{position:absolute;left:8px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:3px;background:rgba(13,17,23,0.9);border:1px solid var(--border);padding:4px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
+.stool{width:44px;height:44px;background:transparent;border:1px solid transparent;color:var(--dim);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1px;touch-action:manipulation;}
+.stool .sl{font-family:'Space Mono',monospace;font-size:7px;letter-spacing:0.3px;}
+.stool.active{color:var(--accent);border-color:var(--accent);background:rgba(0,229,255,0.1);}
+.stool:active{opacity:0.7;}
+.stsep{height:1px;background:var(--border);margin:2px 0;}
 
-/* AXIS CONSTRAINT — right side */
-.axis-toolbar {
-  position:absolute; right:8px; top:50%; transform:translateY(-50%);
-  display:flex; flex-direction:column; gap:3px;
-  background:rgba(13,17,23,0.88); border:1px solid var(--border);
-  padding:4px; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
-}
-.atool {
-  width:36px; height:36px; background:transparent; border:1px solid transparent;
-  font-family:'Space Mono',monospace; font-size:11px; font-weight:700;
-  cursor:pointer; display:flex; align-items:center; justify-content:center;
-  touch-action:manipulation; transition:all 0.15s;
-}
-.atool.x { color:#ff4444; }
-.atool.y { color:#44ff88; }
-.atool.z { color:#4488ff; }
-.atool.free { color:var(--dim); font-size:9px; }
-.atool.active { border-color:currentColor; background:rgba(255,255,255,0.08); }
-.atool:active { opacity:0.7; }
+/* BRUSH HUD — RIGHT */
+.brush-hud{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(13,17,23,0.9);border:1px solid var(--border);padding:8px;display:flex;flex-direction:column;gap:6px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);min-width:44px;}
+.brush-hud label{font-family:'Space Mono',monospace;font-size:8px;color:var(--dim);text-align:center;display:block;}
+.brush-hud input[type=range]{writing-mode:vertical-lr;direction:rtl;width:24px;height:80px;accent-color:var(--accent);cursor:pointer;}
+.brush-val{font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);text-align:center;}
 
-/* MANIP VALUE HUD */
-.manip-hud {
-  position:absolute; top:8px; right:8px;
-  background:rgba(13,17,23,0.88); border:1px solid var(--border);
-  padding:6px 10px; font-family:'Space Mono',monospace; font-size:10px;
-  color:var(--accent); display:none; pointer-events:none;
-  backdrop-filter:blur(8px); line-height:1.6;
-}
-.manip-hud.show { display:block; }
+/* INFO HUD */
+.info-hud{position:absolute;top:8px;right:8px;background:rgba(13,17,23,0.88);border:1px solid var(--border);padding:6px 10px;font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);pointer-events:none;line-height:1.7;display:none;}
+.info-hud.show{display:block;}
+
+/* STATUS */
+.vp-status{position:absolute;top:8px;left:10px;font-family:'Space Mono',monospace;font-size:9px;color:var(--dim);display:flex;align-items:center;gap:6px;background:rgba(13,17,23,0.7);padding:4px 8px;border:1px solid var(--border);}
+.sdot{width:5px;height:5px;border-radius:50%;background:var(--success);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* BRUSH RING — canvas overlay */
+#brush-ring{position:absolute;border:2px solid var(--accent);border-radius:50%;pointer-events:none;display:none;transform:translate(-50%,-50%);opacity:0.7;}
+
+/* SECTIONS */
+.sec{margin-bottom:12px;background:var(--panel);border:1px solid var(--border);}
+.sec-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;cursor:pointer;touch-action:manipulation;user-select:none;}
+.sec-head h3{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:3px;color:var(--dim);text-transform:uppercase;}
+.chev{color:var(--dim);font-size:10px;transition:transform 0.2s;}
+.sec.open .chev{transform:rotate(180deg);}
+.sec-body{padding:0 12px 12px;display:none;}
+.sec.open .sec-body{display:block;}
+
+/* BODY SLIDERS */
+.body-region{margin-bottom:14px;}
+.body-region .rname{font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:2px;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.rname .rdot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+.slider-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.slider-row label{font-family:'Space Mono',monospace;font-size:9px;color:var(--dim);width:72px;flex-shrink:0;}
+.slider-row input[type=range]{flex:1;accent-color:var(--accent);}
+.slider-row .val{font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);width:34px;text-align:right;flex-shrink:0;}
+.reset-btn{padding:4px 8px;border:1px solid var(--border);background:transparent;color:var(--dim);font-family:'Space Mono',monospace;font-size:8px;cursor:pointer;letter-spacing:1px;touch-action:manipulation;}
+.reset-btn:active{border-color:var(--danger);color:var(--danger);}
+
+/* MESH LIST */
+.mesh-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border:1px solid transparent;margin-bottom:3px;cursor:pointer;touch-action:manipulation;}
+.mesh-item:active,.mesh-item.active{border-color:var(--accent);background:rgba(0,229,255,0.05);}
+.mesh-dot{width:7px;height:7px;border-radius:50%;background:var(--accent2);flex-shrink:0;}
+.mesh-item.active .mesh-dot{background:var(--accent);box-shadow:0 0 5px var(--accent);}
+.mesh-name{font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Space Mono',monospace;}
 
 /* CONTROLS */
-#tab-controls { padding:12px 14px calc(12px + var(--safe-bottom)); background:var(--bg); }
-.section { margin-bottom:14px; background:var(--panel); border:1px solid var(--border); overflow:hidden; }
-.section-head { display:flex; align-items:center; justify-content:space-between; padding:10px 12px; cursor:pointer; touch-action:manipulation; user-select:none; }
-.section-head h3 { font-family:'Space Mono',monospace; font-size:9px; letter-spacing:3px; color:var(--dim); text-transform:uppercase; }
-.section-chevron { color:var(--dim); font-size:10px; transition:transform 0.2s; }
-.section.open .section-chevron { transform:rotate(180deg); }
-.section-body { padding:0 12px 12px; display:none; }
-.section.open .section-body { display:block; }
+#tab-controls{background:var(--bg);padding:10px 12px;}
+#tab-sculpt{background:var(--bg);padding:10px 12px;}
 
-.upload-zone { border:1px dashed var(--border); padding:18px 10px; text-align:center; cursor:pointer; background:rgba(0,229,255,0.02); touch-action:manipulation; }
-.upload-zone:active { border-color:var(--accent); background:rgba(0,229,255,0.06); }
-.upload-zone .icon { font-size:26px; margin-bottom:5px; }
-.upload-zone strong { color:var(--accent); font-size:12px; display:block; }
-.upload-zone p { font-size:11px; color:var(--dim); margin-top:3px; }
-
-.model-item { display:flex; align-items:center; gap:8px; padding:8px; border:1px solid transparent; margin-bottom:4px; cursor:pointer; touch-action:manipulation; }
-.model-item:active,.model-item.active { border-color:var(--accent); background:rgba(0,229,255,0.05); }
-.mdot { width:7px; height:7px; border-radius:50%; background:var(--accent2); flex-shrink:0; }
-.model-item.active .mdot { background:var(--accent); box-shadow:0 0 6px var(--accent); }
-.mname { font-size:12px; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.msize { font-size:10px; color:var(--dim); font-family:'Space Mono',monospace; }
-
-.tf-group { margin-bottom:12px; }
-.tf-group label { font-family:'Space Mono',monospace; font-size:9px; color:var(--dim); display:block; margin-bottom:5px; letter-spacing:1px; }
-.xyz-row { display:flex; gap:5px; }
-.xyz-col { flex:1; }
-.xyz-input { width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--text); font-family:'Space Mono',monospace; font-size:11px; padding:8px 4px; text-align:center; outline:none; -webkit-appearance:none; border-radius:0; touch-action:manipulation; }
-.xyz-input:focus { border-color:var(--accent); }
-.xyz-label { font-size:9px; color:var(--dim); text-align:center; margin-top:3px; font-family:'Space Mono',monospace; }
-
-.mode-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:5px; }
-.mode-btn { padding:10px 4px; background:var(--panel2); border:1px solid var(--border); color:var(--dim); font-size:9px; font-family:'Space Mono',monospace; cursor:pointer; text-align:center; touch-action:manipulation; }
-.mode-btn:active { opacity:0.7; }
-.mode-btn.active { background:rgba(0,229,255,0.1); border-color:var(--accent); color:var(--accent); }
-
-.slider-row { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
-.slider-row label { font-family:'Space Mono',monospace; font-size:9px; color:var(--dim); width:65px; flex-shrink:0; }
-.slider-row input[type=range] { flex:1; accent-color:var(--accent); }
-.slider-val { font-family:'Space Mono',monospace; font-size:9px; color:var(--accent); width:30px; text-align:right; flex-shrink:0; }
-
-.color-row { display:flex; gap:7px; flex-wrap:wrap; align-items:center; }
-.color-swatch { width:30px; height:30px; border:2px solid transparent; cursor:pointer; touch-action:manipulation; flex-shrink:0; }
-.color-swatch.active { border-color:white; }
+.upload-zone{border:1px dashed var(--border);padding:16px 10px;text-align:center;cursor:pointer;background:rgba(0,229,255,0.02);touch-action:manipulation;}
+.upload-zone:active{border-color:var(--accent);}
+.upload-zone strong{color:var(--accent);font-size:12px;display:block;}
+.upload-zone p{font-size:11px;color:var(--dim);margin-top:3px;}
 
 /* AI CHAT */
-#tab-ai { display:none; flex-direction:column; background:var(--bg); }
-#tab-ai.active { display:flex; }
-.chat-msgs { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:10px; -webkit-overflow-scrolling:touch; }
-.msg { max-width:88%; }
-.msg.ai { align-self:flex-start; }
-.msg.user { align-self:flex-end; }
-.msg-label { font-family:'Space Mono',monospace; font-size:8px; color:var(--dim); margin-bottom:4px; letter-spacing:1px; }
-.msg.user .msg-label { text-align:right; }
-.msg-bubble { padding:10px 12px; border:1px solid var(--border); background:var(--panel); font-size:12px; line-height:1.6; }
-.msg.ai .msg-bubble { border-left:2px solid var(--accent); }
-.msg.user .msg-bubble { border-right:2px solid var(--accent2); background:rgba(124,58,237,0.08); }
-
-.chips-bar { padding:8px 10px; border-top:1px solid var(--border); border-bottom:1px solid var(--border); display:flex; gap:5px; overflow-x:auto; flex-shrink:0; scrollbar-width:none; background:var(--panel); }
-.chips-bar::-webkit-scrollbar { display:none; }
-.chip { padding:6px 10px; border:1px solid var(--border); font-size:10px; font-family:'Space Mono',monospace; cursor:pointer; color:var(--dim); white-space:nowrap; flex-shrink:0; touch-action:manipulation; background:var(--panel2); }
-.chip:active { border-color:var(--accent); color:var(--accent); }
-
-.chat-input-area { padding:10px; padding-bottom:calc(10px + var(--safe-bottom)); border-top:1px solid var(--border); background:var(--panel); flex-shrink:0; display:flex; gap:6px; align-items:flex-end; }
-#chat-input { flex:1; background:var(--panel2); border:1px solid var(--border); color:var(--text); font-family:'DM Sans',sans-serif; font-size:13px; padding:9px 10px; resize:none; outline:none; height:50px; line-height:1.5; -webkit-appearance:none; border-radius:0; }
-#chat-input:focus { border-color:var(--accent); }
-#chat-input::placeholder { color:var(--dim); }
-.send-btn { width:40px; height:50px; background:var(--accent); border:none; color:#000; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; touch-action:manipulation; }
-.send-btn:active { background:#00b8d4; }
-.send-btn:disabled { background:var(--dim); }
-
-.thinking { display:flex; gap:5px; padding:10px 12px; align-items:center; }
-.thinking span { width:6px; height:6px; background:var(--accent); border-radius:50%; animation:blink 1.2s infinite; }
-.thinking span:nth-child(2) { animation-delay:0.2s; }
-.thinking span:nth-child(3) { animation-delay:0.4s; }
-@keyframes blink { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
+#tab-ai{background:var(--bg);display:none;flex-direction:column;}
+#tab-ai.active{display:flex;}
+.chat-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch;}
+.msg{max-width:88%;}
+.msg.ai{align-self:flex-start;}
+.msg.user{align-self:flex-end;}
+.msg-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--dim);margin-bottom:4px;letter-spacing:1px;}
+.msg.user .msg-label{text-align:right;}
+.msg-bubble{padding:10px 12px;border:1px solid var(--border);background:var(--panel);font-size:12px;line-height:1.6;}
+.msg.ai .msg-bubble{border-left:2px solid var(--accent);}
+.msg.user .msg-bubble{border-right:2px solid var(--accent2);background:rgba(124,58,237,0.08);}
+.chips-bar{padding:8px 10px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);display:flex;gap:5px;overflow-x:auto;flex-shrink:0;scrollbar-width:none;background:var(--panel);}
+.chips-bar::-webkit-scrollbar{display:none;}
+.chip{padding:6px 10px;border:1px solid var(--border);font-size:10px;font-family:'Space Mono',monospace;cursor:pointer;color:var(--dim);white-space:nowrap;flex-shrink:0;touch-action:manipulation;background:var(--panel2);}
+.chip:active{border-color:var(--accent);color:var(--accent);}
+.chat-input-area{padding:10px;padding-bottom:calc(10px + var(--safe-bottom));border-top:1px solid var(--border);background:var(--panel);flex-shrink:0;display:flex;gap:6px;align-items:flex-end;}
+#chat-input{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:9px 10px;resize:none;outline:none;height:50px;line-height:1.5;-webkit-appearance:none;border-radius:0;}
+#chat-input:focus{border-color:var(--accent);}
+#chat-input::placeholder{color:var(--dim);}
+.send-btn{width:40px;height:50px;background:var(--accent);border:none;color:#000;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;touch-action:manipulation;}
+.send-btn:active{background:#00b8d4;}
+.send-btn:disabled{background:var(--dim);}
+.thinking{display:flex;gap:5px;padding:10px 12px;align-items:center;}
+.thinking span{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:blink 1.2s infinite;}
+.thinking span:nth-child(2){animation-delay:0.2s;}
+.thinking span:nth-child(3){animation-delay:0.4s;}
+@keyframes blink{0%,80%,100%{opacity:0.2}40%{opacity:1}}
 
 /* TAB BAR */
-.tab-bar { position:fixed; bottom:0; left:0; right:0; height:calc(var(--tab-h) + var(--safe-bottom)); padding-bottom:var(--safe-bottom); background:var(--panel); border-top:1px solid var(--border); display:flex; z-index:100; }
-.tab-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; cursor:pointer; touch-action:manipulation; color:var(--dim); font-family:'Space Mono',monospace; font-size:8px; letter-spacing:1px; user-select:none; -webkit-user-select:none; position:relative; }
-.tab-item.active { color:var(--accent); }
-.tab-item.active::after { content:''; position:absolute; top:0; left:20%; right:20%; height:2px; background:var(--accent); box-shadow:var(--glow); }
-.tab-icon { font-size:20px; line-height:1; }
-.tab-badge { position:absolute; top:6px; right:calc(50% - 16px); width:7px; height:7px; border-radius:50%; background:var(--accent); display:none; }
-.tab-badge.show { display:block; }
+.tab-bar{position:fixed;bottom:0;left:0;right:0;height:calc(var(--tab-h) + var(--safe-bottom));padding-bottom:var(--safe-bottom);background:var(--panel);border-top:1px solid var(--border);display:flex;z-index:100;}
+.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;touch-action:manipulation;color:var(--dim);font-family:'Space Mono',monospace;font-size:7px;letter-spacing:1px;user-select:none;-webkit-user-select:none;position:relative;}
+.tab-item.active{color:var(--accent);}
+.tab-item.active::after{content:'';position:absolute;top:0;left:15%;right:15%;height:2px;background:var(--accent);box-shadow:var(--glow);}
+.tab-icon{font-size:18px;line-height:1;}
+.tab-badge{position:absolute;top:6px;right:calc(50% - 14px);width:6px;height:6px;border-radius:50%;background:var(--accent);display:none;}
+.tab-badge.show{display:block;}
 
-
-/* API KEY MODAL */
-#apikey-modal { position:fixed; inset:0; background:rgba(8,11,16,0.95); z-index:500; display:flex; align-items:center; justify-content:center; padding:20px; }
-#apikey-modal.hidden { display:none; }
-.modal-box { background:var(--panel); border:1px solid var(--accent); padding:24px; max-width:380px; width:100%; }
-.modal-box h2 { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:3px; color:var(--accent); margin-bottom:6px; }
-.modal-box p { font-size:12px; color:var(--dim); line-height:1.5; margin-bottom:16px; }
-.modal-box input { width:100%; background:var(--panel2); border:1px solid var(--border); color:var(--text); font-family:'Space Mono',monospace; font-size:11px; padding:10px 12px; outline:none; margin-bottom:10px; -webkit-appearance:none; border-radius:0; }
-.modal-box input:focus { border-color:var(--accent); }
-.modal-row { display:flex; gap:8px; }
-.modal-btn { flex:1; padding:10px; border:1px solid var(--border); background:transparent; color:var(--dim); font-family:'Space Mono',monospace; font-size:10px; cursor:pointer; letter-spacing:1px; touch-action:manipulation; }
-.modal-btn.primary { background:var(--accent); color:#000; border-color:var(--accent); font-weight:700; }
-.modal-btn:active { opacity:0.8; }
-.modal-note { font-size:10px; color:var(--dim); margin-top:10px; line-height:1.4; }
-.key-indicator { width:8px; height:8px; border-radius:50%; background:var(--danger); flex-shrink:0; cursor:pointer; touch-action:manipulation; }
-.key-indicator.set { background:var(--success); }
-.provider-tabs { display:flex; gap:0; margin-bottom:14px; }
-.provider-tab { flex:1; padding:9px 4px; border:1px solid var(--border); background:var(--panel2); color:var(--dim); font-family:'Space Mono',monospace; font-size:10px; cursor:pointer; text-align:center; letter-spacing:1px; touch-action:manipulation; transition:all 0.15s; }
-.provider-tab:first-child { border-right:none; }
-.provider-tab.active { background:rgba(0,229,255,0.1); border-color:var(--accent); color:var(--accent); }
-.provider-tab:active { opacity:0.7; }
-.provider-hint { font-size:10px; color:var(--dim); margin-bottom:8px; }
+/* MODAL */
+#apikey-modal{position:fixed;inset:0;background:rgba(8,11,16,0.95);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
+#apikey-modal.hidden{display:none;}
+.modal-box{background:var(--panel);border:1px solid var(--accent);padding:22px;max-width:380px;width:100%;}
+.modal-box h2{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--accent);margin-bottom:6px;}
+.modal-box p{font-size:12px;color:var(--dim);line-height:1.5;margin-bottom:14px;}
+.provider-tabs{display:flex;margin-bottom:12px;}
+.provider-tab{flex:1;padding:9px 4px;border:1px solid var(--border);background:var(--panel2);color:var(--dim);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;text-align:center;letter-spacing:1px;touch-action:manipulation;}
+.provider-tab:first-child{border-right:none;}
+.provider-tab.active{background:rgba(0,229,255,0.1);border-color:var(--accent);color:var(--accent);}
+.provider-hint{font-size:10px;color:var(--dim);margin-bottom:8px;}
+.modal-box input{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Space Mono',monospace;font-size:11px;padding:10px 12px;outline:none;margin-bottom:10px;-webkit-appearance:none;border-radius:0;}
+.modal-box input:focus{border-color:var(--accent);}
+.modal-row{display:flex;gap:8px;}
+.modal-btn{flex:1;padding:10px;border:1px solid var(--border);background:transparent;color:var(--dim);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px;touch-action:manipulation;}
+.modal-btn.primary{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700;}
+.modal-btn:active{opacity:0.8;}
+.modal-note{font-size:10px;color:var(--dim);margin-top:10px;line-height:1.4;}
 
 /* LOADING */
-#loading { position:fixed; inset:0; background:rgba(8,11,16,0.88); display:none; align-items:center; justify-content:center; flex-direction:column; gap:12px; z-index:200; backdrop-filter:blur(6px); }
-#loading.show { display:flex; }
-.spinner { width:36px; height:36px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
-@keyframes spin { to{transform:rotate(360deg)} }
-#loading p { font-family:'Space Mono',monospace; font-size:10px; color:var(--dim); letter-spacing:2px; }
+#loading{position:fixed;inset:0;background:rgba(8,11,16,0.88);display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;z-index:200;backdrop-filter:blur(6px);}
+#loading.show{display:flex;}
+.spinner{width:36px;height:36px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading p{font-family:'Space Mono',monospace;font-size:10px;color:var(--dim);letter-spacing:2px;}
 
 /* TOAST */
-#toast { position:fixed; top:calc(var(--header-h)+8px); left:50%; transform:translateX(-50%) translateY(-10px); background:var(--panel); border:1px solid var(--accent); padding:8px 16px; font-size:11px; font-family:'Space Mono',monospace; z-index:300; white-space:nowrap; opacity:0; transition:opacity 0.2s,transform 0.2s; pointer-events:none; max-width:90vw; overflow:hidden; text-overflow:ellipsis; }
-#toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+#toast{position:fixed;top:calc(var(--header-h)+8px);left:50%;transform:translateX(-50%) translateY(-10px);background:var(--panel);border:1px solid var(--accent);padding:8px 16px;font-size:11px;font-family:'Space Mono',monospace;z-index:300;white-space:nowrap;opacity:0;transition:opacity 0.2s,transform 0.2s;pointer-events:none;max-width:90vw;overflow:hidden;text-overflow:ellipsis;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-/* DESKTOP OVERRIDE */
-@media (min-width:768px) {
-  html,body { position:static; overflow:hidden; height:100vh; }
-  .content { position:fixed; top:var(--header-h); bottom:0; left:0; right:0; display:flex; overflow:hidden; }
-  .tab-bar { display:none; }
-  .tab-panel { position:relative; display:none; overflow-y:auto; }
-  .tab-panel.active { display:flex !important; flex-direction:column; }
-  #tab-view { flex:1; order:2; display:block !important; overflow:hidden; min-width:0; }
-  #tab-controls { width:230px; order:1; flex-shrink:0; border-right:1px solid var(--border); display:block !important; padding:10px; }
-  #tab-ai { width:300px; order:3; flex-shrink:0; border-left:1px solid var(--border); display:flex !important; flex-direction:column; }
-  .section.open .section-body { display:block; }
+/* DESKTOP */
+@media(min-width:768px){
+  html,body{position:static;overflow:hidden;height:100vh;}
+  .content{position:fixed;top:var(--header-h);bottom:0;left:0;right:0;display:flex;}
+  .tab-bar{display:none;}
+  .tab-panel{position:relative;display:none;overflow-y:auto;}
+  .tab-panel.active{display:flex!important;flex-direction:column;}
+  #tab-view{flex:1;order:2;display:block!important;overflow:hidden;min-width:0;}
+  #tab-controls{width:220px;order:1;flex-shrink:0;border-right:1px solid var(--border);display:block!important;}
+  #tab-sculpt{width:240px;order:3;flex-shrink:0;border-left:1px solid var(--border);display:block!important;}
+  #tab-ai{display:none!important;}
 }
-
-::-webkit-scrollbar { width:3px; }
-::-webkit-scrollbar-thumb { background:var(--border); }
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:var(--border);}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">AVATARFORGE <sub>AI STUDIO</sub></div>
-  <div style="display:flex;align-items:center;gap:8px;"><div class="key-indicator" id="key-dot" onclick="showApiModal()" title="Set API Key"></div></div>
-  <div class="header-btns">
+  <div class="logo">AVATARFORGE <sub>SCULPT</sub></div>
+  <div class="hbtns">
+    <div class="key-dot" id="key-dot" onclick="showApiModal()" title="API Key"></div>
     <button class="hbtn" onclick="resetCamera()">⟳</button>
     <button class="hbtn" onclick="takeScreenshot()">⬇</button>
-    <button class="hbtn primary" onclick="document.getElementById('file-input').click()">+ GLB</button>
+    <button class="hbtn primary" onclick="document.getElementById('file-input').click()">+GLB</button>
   </div>
 </header>
 
@@ -276,219 +217,253 @@ header {
 
 <div class="content">
 
-  <!-- VIEWPORT -->
+  <!-- ══ VIEWPORT ══ -->
   <div class="tab-panel active" id="tab-view">
     <div class="grid-overlay"></div>
     <canvas id="three-canvas"></canvas>
+    <div id="brush-ring"></div>
+
     <div id="drop-prompt">
-      <div class="big">LOAD A MODEL</div>
-      <div class="sub">GLB / GLTF avatar file</div>
-      <div class="load-btn" onclick="document.getElementById('file-input').click()">⬡ BROWSE FILE</div>
-    </div>
-    <!-- Camera tools bottom -->
-    <div class="vp-toolbar">
-      <button class="vtool active" id="tool-orbit" onclick="setCamTool('orbit')" title="Orbit">⟳</button>
-      <button class="vtool" id="tool-pan" onclick="setCamTool('pan')" title="Pan">✥</button>
-      <div class="vtsep"></div>
-      <button class="vtool" onclick="fitCamera()" title="Fit">⊡</button>
-      <button class="vtool" id="btn-grid" onclick="toggleGrid()" title="Grid">⊞</button>
-      <button class="vtool" id="btn-axes" onclick="toggleAxes()" title="Axes">⊕</button>
-      <div class="vtsep"></div>
-      <button class="vtool" onclick="toggleBg()" title="BG">◑</button>
+      <div class="big">LOAD AVATAR</div>
+      <div class="sub">GLB / GLTF file</div>
+      <div class="lbtn" onclick="document.getElementById('file-input').click()">⬡ BROWSE</div>
     </div>
 
-    <!-- Manipulation tools left -->
-    <div class="manip-toolbar">
-      <button class="mtool active" id="mtool-none" onclick="setManipTool('none')" title="Select / Orbit">
-        <span>↖</span><span class="mlabel">VIEW</span>
+    <!-- Camera bar bottom -->
+    <div class="cam-bar">
+      <button class="ctool active" id="ctool-orbit" onclick="setCamMode('orbit')" title="Orbit">⟳</button>
+      <button class="ctool" id="ctool-pan" onclick="setCamMode('pan')" title="Pan">✥</button>
+      <div class="ctsep"></div>
+      <button class="ctool" onclick="fitCamera()" title="Fit">⊡</button>
+      <button class="ctool" id="btn-wire" onclick="toggleWireframe()" title="Wireframe">⬡</button>
+      <button class="ctool" id="btn-grid" onclick="toggleGrid()" title="Grid">⊞</button>
+      <div class="ctsep"></div>
+      <button class="ctool" onclick="undoDeform()" title="Undo">↩</button>
+      <button class="ctool" onclick="resetAllDeforms()" title="Reset All">✕</button>
+    </div>
+
+    <!-- Sculpt tools left -->
+    <div class="sculpt-bar">
+      <button class="stool active" id="stool-view" onclick="setSculptMode('view')">
+        <span>↖</span><span class="sl">VIEW</span>
       </button>
-      <div class="mtsep"></div>
-      <button class="mtool" id="mtool-grab" onclick="setManipTool('grab')" title="Grab / Move">
-        <span>✋</span><span class="mlabel">GRAB</span>
+      <div class="stsep"></div>
+      <button class="stool" id="stool-push" onclick="setSculptMode('push')" title="Push outward">
+        <span>⊕</span><span class="sl">PUSH</span>
       </button>
-      <button class="mtool" id="mtool-rotate" onclick="setManipTool('rotate')" title="Rotate">
-        <span>↻</span><span class="mlabel">ROT</span>
+      <button class="stool" id="stool-pull" onclick="setSculptMode('pull')" title="Pull inward">
+        <span>⊖</span><span class="sl">PULL</span>
       </button>
-      <button class="mtool" id="mtool-scale" onclick="setManipTool('scale')" title="Scale">
-        <span>⤡</span><span class="mlabel">SCALE</span>
+      <button class="stool" id="stool-smooth" onclick="setSculptMode('smooth')" title="Smooth">
+        <span>◎</span><span class="sl">SMTH</span>
       </button>
-      <div class="mtsep"></div>
-      <button class="mtool" id="mtool-expand" onclick="setManipTool('expand')" title="Expand / Uniform Scale">
-        <span>⊕</span><span class="mlabel">XPAND</span>
+      <button class="stool" id="stool-inflate" onclick="setSculptMode('inflate')" title="Inflate along normals">
+        <span>◉</span><span class="sl">INFL</span>
       </button>
-      <button class="mtool" id="mtool-lift" onclick="setManipTool('lift')" title="Lift (Y axis)">
-        <span>↑</span><span class="mlabel">LIFT</span>
+      <div class="stsep"></div>
+      <button class="stool" id="stool-grab" onclick="setSculptMode('grab')" title="Grab & drag vertices">
+        <span>✋</span><span class="sl">GRAB</span>
       </button>
     </div>
 
-    <!-- Axis constraints right -->
-    <div class="axis-toolbar" id="axis-toolbar" style="display:none">
-      <button class="atool free active" id="axis-free" onclick="setAxis('free')" title="Free">ALL</button>
-      <button class="atool x" id="axis-x" onclick="setAxis('x')" title="X axis">X</button>
-      <button class="atool y" id="axis-y" onclick="setAxis('y')" title="Y axis">Y</button>
-      <button class="atool z" id="axis-z" onclick="setAxis('z')" title="Z axis">Z</button>
+    <!-- Brush controls right -->
+    <div class="brush-hud" id="brush-hud" style="display:none">
+      <label>SIZE</label>
+      <input type="range" id="brush-size" min="10" max="200" value="60" oninput="brushSize=+this.value;document.getElementById('bsize-val').textContent=this.value" style="writing-mode:vertical-lr;direction:rtl;width:24px;height:70px;accent-color:var(--accent)">
+      <div class="brush-val" id="bsize-val">60</div>
+      <div style="height:6px"></div>
+      <label>STR</label>
+      <input type="range" id="brush-str" min="1" max="100" value="30" oninput="brushStrength=this.value/500;document.getElementById('bstr-val').textContent=this.value" style="writing-mode:vertical-lr;direction:rtl;width:24px;height:70px;accent-color:var(--warn)">
+      <div class="brush-val" id="bstr-val" style="color:var(--warn)">30</div>
     </div>
 
-    <!-- Value HUD -->
-    <div class="manip-hud" id="manip-hud"></div>
+    <!-- Info HUD -->
+    <div class="info-hud" id="info-hud"></div>
 
     <div class="vp-status">
       <div class="sdot"></div>
       <span id="status-text">READY</span>
-      <span id="poly-count"></span>
+      <span id="poly-count" style="margin-left:4px"></span>
     </div>
   </div>
 
-  <!-- CONTROLS -->
-  <div class="tab-panel" id="tab-controls">
-    <div class="section open">
-      <div class="section-head" onclick="toggleSection(this)"><h3>Load Model</h3><span class="section-chevron">▾</span></div>
-      <div class="section-body">
+  <!-- ══ CONTROLS ══ -->
+  <div class="tab-panel" id="tab-controls" style="padding:10px 12px">
+
+    <div class="sec open">
+      <div class="sec-head" onclick="toggleSec(this)"><h3>Load Model</h3><span class="chev">▾</span></div>
+      <div class="sec-body">
         <div class="upload-zone" onclick="document.getElementById('file-input').click()">
-          <div class="icon">⬡</div><strong>Tap to browse</strong><p>GLB / GLTF avatar</p>
+          <strong>⬡ Tap to load GLB</strong><p>GLTF / GLB avatar</p>
         </div>
-        <div id="model-list" style="margin-top:10px"><p style="font-size:11px;color:var(--dim)">No models loaded</p></div>
+        <div id="model-list" style="margin-top:8px"><p style="font-size:11px;color:var(--dim)">No model loaded</p></div>
       </div>
     </div>
 
-    <div class="section open">
-      <div class="section-head" onclick="toggleSection(this)"><h3>Render Mode</h3><span class="section-chevron">▾</span></div>
-      <div class="section-body">
-        <div class="mode-grid">
-          <button class="mode-btn active" onclick="setRenderMode('solid',this)">SOLID</button>
-          <button class="mode-btn" onclick="setRenderMode('wire',this)">WIRE</button>
-          <button class="mode-btn" onclick="setRenderMode('normal',this)">NORMAL</button>
-          <button class="mode-btn" onclick="setRenderMode('depth',this)">DEPTH</button>
-          <button class="mode-btn" onclick="setRenderMode('xray',this)">X-RAY</button>
-          <button class="mode-btn" onclick="setRenderMode('flat',this)">FLAT</button>
-        </div>
+    <div class="sec open">
+      <div class="sec-head" onclick="toggleSec(this)"><h3>Meshes</h3><span class="chev">▾</span></div>
+      <div class="sec-body">
+        <div id="mesh-list"><p style="font-size:11px;color:var(--dim)">Load a model first</p></div>
       </div>
     </div>
 
-    <div class="section open">
-      <div class="section-head" onclick="toggleSection(this)"><h3>Transform</h3><span class="section-chevron">▾</span></div>
-      <div class="section-body">
-        <div class="tf-group">
-          <label>POSITION</label>
-          <div class="xyz-row">
-            <div class="xyz-col"><input class="xyz-input" type="number" id="pos-x" value="0" step="0.1" inputmode="decimal" onchange="applyTransform()"><div class="xyz-label">X</div></div>
-            <div class="xyz-col"><input class="xyz-input" type="number" id="pos-y" value="0" step="0.1" inputmode="decimal" onchange="applyTransform()"><div class="xyz-label">Y</div></div>
-            <div class="xyz-col"><input class="xyz-input" type="number" id="pos-z" value="0" step="0.1" inputmode="decimal" onchange="applyTransform()"><div class="xyz-label">Z</div></div>
-          </div>
+    <div class="sec open">
+      <div class="sec-head" onclick="toggleSec(this)"><h3>Render</h3><span class="chev">▾</span></div>
+      <div class="sec-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:10px">
+          <button class="reset-btn active-mode" onclick="setRenderMode('solid',this)" style="padding:8px 0">SOLID</button>
+          <button class="reset-btn" onclick="setRenderMode('wire',this)" style="padding:8px 0">WIRE</button>
+          <button class="reset-btn" onclick="setRenderMode('normal',this)" style="padding:8px 0">NORM</button>
+          <button class="reset-btn" onclick="setRenderMode('flat',this)" style="padding:8px 0">FLAT</button>
+          <button class="reset-btn" onclick="setRenderMode('xray',this)" style="padding:8px 0">XRAY</button>
+          <button class="reset-btn" onclick="setRenderMode('depth',this)" style="padding:8px 0">DEPTH</button>
         </div>
-        <div class="tf-group">
-          <label>ROTATION °</label>
-          <div class="xyz-row">
-            <div class="xyz-col"><input class="xyz-input" type="number" id="rot-x" value="0" step="5" inputmode="decimal" onchange="applyTransform()"><div class="xyz-label">X</div></div>
-            <div class="xyz-col"><input class="xyz-input" type="number" id="rot-y" value="0" step="5" inputmode="decimal" onchange="applyTransform()"><div class="xyz-label">Y</div></div>
-            <div class="xyz-col"><input class="xyz-input" type="number" id="rot-z" value="0" step="5" inputmode="decimal" onchange="applyTransform()"><div class="xyz-label">Z</div></div>
-          </div>
-        </div>
-        <div class="tf-group">
-          <label>SCALE</label>
-          <div class="xyz-row">
-            <div class="xyz-col"><input class="xyz-input" type="number" id="scale-x" value="1" step="0.1" inputmode="decimal" onchange="applyTransform()"><div class="xyz-label">X</div></div>
-            <div class="xyz-col"><input class="xyz-input" type="number" id="scale-y" value="1" step="0.1" inputmode="decimal" onchange="applyTransform()"><div class="xyz-label">Y</div></div>
-            <div class="xyz-col"><input class="xyz-input" type="number" id="scale-z" value="1" step="0.1" inputmode="decimal" onchange="applyTransform()"><div class="xyz-label">Z</div></div>
-          </div>
+        <div class="slider-row"><label>AMBIENT</label><input type="range" min="0" max="3" step="0.1" value="0.5" oninput="ambientLight.intensity=+this.value;this.nextElementSibling.textContent=this.value"><span class="val">0.5</span></div>
+        <div class="slider-row"><label>DIRECT</label><input type="range" min="0" max="5" step="0.1" value="1.5" oninput="dirLight.intensity=+this.value;this.nextElementSibling.textContent=this.value"><span class="val">1.5</span></div>
+        <div class="slider-row"><label>OPACITY</label><input type="range" min="0.1" max="1" step="0.05" value="1" oninput="setOpacity(this.value);this.nextElementSibling.textContent=(+this.value).toFixed(2)"><span class="val">1.00</span></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px" id="tint-swatches">
+          <div style="width:26px;height:26px;background:#ffffff;border:2px solid white;cursor:pointer" onclick="setTint('#ffffff',this)"></div>
+          <div style="width:26px;height:26px;background:#00e5ff;border:2px solid transparent;cursor:pointer" onclick="setTint('#00e5ff',this)"></div>
+          <div style="width:26px;height:26px;background:#7c3aed;border:2px solid transparent;cursor:pointer" onclick="setTint('#7c3aed',this)"></div>
+          <div style="width:26px;height:26px;background:#f59e0b;border:2px solid transparent;cursor:pointer" onclick="setTint('#f59e0b',this)"></div>
+          <div style="width:26px;height:26px;background:#ef4444;border:2px solid transparent;cursor:pointer" onclick="setTint('#ef4444',this)"></div>
+          <div style="width:26px;height:26px;background:#10b981;border:2px solid transparent;cursor:pointer" onclick="setTint('#10b981',this)"></div>
+          <input type="color" style="width:26px;height:26px;border:none;cursor:pointer;padding:0;" onchange="setTint(this.value)">
         </div>
       </div>
     </div>
 
-    <div class="section">
-      <div class="section-head" onclick="toggleSection(this)"><h3>Lighting</h3><span class="section-chevron">▾</span></div>
-      <div class="section-body">
-        <div class="slider-row"><label>AMBIENT</label><input type="range" min="0" max="3" step="0.1" value="0.5" oninput="ambientLight.intensity=+this.value;this.nextElementSibling.textContent=this.value"><span class="slider-val">0.5</span></div>
-        <div class="slider-row"><label>DIRECT</label><input type="range" min="0" max="5" step="0.1" value="1.5" oninput="dirLight.intensity=+this.value;this.nextElementSibling.textContent=this.value"><span class="slider-val">1.5</span></div>
-        <div class="slider-row"><label>FILL</label><input type="range" min="0" max="3" step="0.1" value="1" oninput="fillLight.intensity=+this.value*0.4;rimLight.intensity=+this.value*0.3;this.nextElementSibling.textContent=this.value"><span class="slider-val">1.0</span></div>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-head" onclick="toggleSection(this)"><h3>Tint &amp; Opacity</h3><span class="section-chevron">▾</span></div>
-      <div class="section-body">
-        <div class="color-row">
-          <div class="color-swatch active" style="background:#ffffff" onclick="setTint('#ffffff',this)"></div>
-          <div class="color-swatch" style="background:#00e5ff" onclick="setTint('#00e5ff',this)"></div>
-          <div class="color-swatch" style="background:#7c3aed" onclick="setTint('#7c3aed',this)"></div>
-          <div class="color-swatch" style="background:#f59e0b" onclick="setTint('#f59e0b',this)"></div>
-          <div class="color-swatch" style="background:#ef4444" onclick="setTint('#ef4444',this)"></div>
-          <div class="color-swatch" style="background:#10b981" onclick="setTint('#10b981',this)"></div>
-          <div class="color-swatch" style="background:#ec4899" onclick="setTint('#ec4899',this)"></div>
-          <input type="color" id="custom-color" style="width:30px;height:30px;border:none;cursor:pointer;background:none;padding:0;" onchange="setTint(this.value)">
-        </div>
-        <div class="slider-row" style="margin-top:10px"><label>OPACITY</label><input type="range" min="0" max="1" step="0.05" value="1" oninput="setOpacity(this.value);this.nextElementSibling.textContent=(+this.value).toFixed(2)"><span class="slider-val">1.00</span></div>
-      </div>
-    </div>
   </div>
 
-  <!-- AI CHAT -->
+  <!-- ══ SCULPT / BODY SLIDERS ══ -->
+  <div class="tab-panel" id="tab-sculpt" style="padding:10px 12px">
+
+    <div class="sec open">
+      <div class="sec-head" onclick="toggleSec(this)"><h3>Body Shaping</h3><span class="chev">▾</span></div>
+      <div class="sec-body" id="body-sliders">
+        <!-- Dynamically generated per body region -->
+        <p style="font-size:11px;color:var(--dim)">Load a model to enable body shaping</p>
+      </div>
+    </div>
+
+    <div class="sec open">
+      <div class="sec-head" onclick="toggleSec(this)"><h3>Sculpt Brush</h3><span class="chev">▾</span></div>
+      <div class="sec-body">
+        <div class="slider-row"><label>BRUSH SIZE</label><input type="range" min="10" max="200" value="60" oninput="brushSize=+this.value;document.getElementById('brush-size').value=this.value;document.getElementById('bsize-val').textContent=this.value;this.nextElementSibling.textContent=this.value"><span class="val">60</span></div>
+        <div class="slider-row"><label>STRENGTH</label><input type="range" min="1" max="100" value="30" oninput="brushStrength=this.value/500;document.getElementById('brush-str').value=this.value;document.getElementById('bstr-val').textContent=this.value;this.nextElementSibling.textContent=this.value"><span class="val">30</span></div>
+        <div class="slider-row"><label>FALLOFF</label><input type="range" min="0" max="100" value="70" oninput="brushFalloff=this.value/100;this.nextElementSibling.textContent=this.value"><span class="val">70</span></div>
+        <div style="margin-top:8px;display:flex;gap:6px">
+          <button class="reset-btn" onclick="undoDeform()" style="flex:1;padding:8px 0">↩ UNDO</button>
+          <button class="reset-btn" onclick="resetAllDeforms()" style="flex:1;padding:8px 0;color:var(--danger)">✕ RESET</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head" onclick="toggleSec(this)"><h3>Transform</h3><span class="chev">▾</span></div>
+      <div class="sec-body">
+        <div style="margin-bottom:10px">
+          <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--dim);margin-bottom:5px">POSITION</div>
+          <div style="display:flex;gap:4px">
+            <div style="flex:1"><input class="xyz-in" type="number" id="pos-x" value="0" step="0.1" inputmode="decimal" onchange="applyTransform()"><div class="xyz-l">X</div></div>
+            <div style="flex:1"><input class="xyz-in" type="number" id="pos-y" value="0" step="0.1" inputmode="decimal" onchange="applyTransform()"><div class="xyz-l">Y</div></div>
+            <div style="flex:1"><input class="xyz-in" type="number" id="pos-z" value="0" step="0.1" inputmode="decimal" onchange="applyTransform()"><div class="xyz-l">Z</div></div>
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--dim);margin-bottom:5px">ROTATION °</div>
+          <div style="display:flex;gap:4px">
+            <div style="flex:1"><input class="xyz-in" type="number" id="rot-x" value="0" step="5" inputmode="decimal" onchange="applyTransform()"><div class="xyz-l">X</div></div>
+            <div style="flex:1"><input class="xyz-in" type="number" id="rot-y" value="0" step="5" inputmode="decimal" onchange="applyTransform()"><div class="xyz-l">Y</div></div>
+            <div style="flex:1"><input class="xyz-in" type="number" id="rot-z" value="0" step="5" inputmode="decimal" onchange="applyTransform()"><div class="xyz-l">Z</div></div>
+          </div>
+        </div>
+        <div>
+          <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--dim);margin-bottom:5px">SCALE</div>
+          <div style="display:flex;gap:4px">
+            <div style="flex:1"><input class="xyz-in" type="number" id="scale-x" value="1" step="0.05" inputmode="decimal" onchange="applyTransform()"><div class="xyz-l">X</div></div>
+            <div style="flex:1"><input class="xyz-in" type="number" id="scale-y" value="1" step="0.05" inputmode="decimal" onchange="applyTransform()"><div class="xyz-l">Y</div></div>
+            <div style="flex:1"><input class="xyz-in" type="number" id="scale-z" value="1" step="0.05" inputmode="decimal" onchange="applyTransform()"><div class="xyz-l">Z</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ AI CHAT ══ -->
   <div class="tab-panel" id="tab-ai">
     <div class="chat-msgs" id="chat-msgs">
       <div class="msg ai">
         <div class="msg-label">AVATARFORGE AI</div>
-        <div class="msg-bubble">Load a GLB model, then describe how to change it. Tap the <strong>●</strong> dot in the header to set your API key (Claude or Grok).<br><br>I can adjust <strong>materials, render mode, transforms, lighting, glow, metalness</strong>, and more.</div>
+        <div class="msg-bubble">Load a GLB avatar, then use the <strong>SCULPT</strong> tab for body shaping sliders, or the sculpt brush tools on the viewport to push/pull/inflate mesh regions directly.<br><br>You can also describe changes here and I'll apply them.</div>
       </div>
     </div>
     <div class="chips-bar">
-      <div class="chip" onclick="chip('Make it glow cyan')">✦ Glow</div>
+      <div class="chip" onclick="chip('Increase bust size')">◉ Bust</div>
+      <div class="chip" onclick="chip('Widen hips')">⊕ Hips</div>
+      <div class="chip" onclick="chip('Slim the waist')">⊖ Waist</div>
+      <div class="chip" onclick="chip('Broaden shoulders')">⇔ Shoulders</div>
+      <div class="chip" onclick="chip('Make thighs larger')">⊕ Thighs</div>
+      <div class="chip" onclick="chip('Make the model glow cyan')">✦ Glow</div>
       <div class="chip" onclick="chip('Switch to wireframe')">⬡ Wire</div>
-      <div class="chip" onclick="chip('Make it metallic chrome')">◈ Metal</div>
-      <div class="chip" onclick="chip('Scale up 50%')">⇱ Scale</div>
-      <div class="chip" onclick="chip('Rotate 45 degrees on Y axis')">↻ Rotate</div>
-      <div class="chip" onclick="chip('Semi-transparent ghost effect')">◎ Ghost</div>
-      <div class="chip" onclick="chip('Add red emissive highlights')">◉ Emissive</div>
-      <div class="chip" onclick="chip('Reset all changes')">⟳ Reset</div>
+      <div class="chip" onclick="chip('Reset all body changes')">⟳ Reset</div>
     </div>
     <div class="chat-input-area">
-      <textarea id="chat-input" placeholder="Describe changes to your model..." onkeydown="handleKey(event)"></textarea>
+      <textarea id="chat-input" placeholder="Describe body or material changes..." onkeydown="handleKey(event)"></textarea>
       <button class="send-btn" id="send-btn" onclick="sendMessage()">➤</button>
     </div>
   </div>
 
 </div>
 
-<!-- Tab Bar -->
+<!-- TAB BAR -->
 <div class="tab-bar">
   <div class="tab-item active" id="tabbar-view" onclick="switchTab('view')">
     <div class="tab-icon">⬡</div><span>VIEW</span>
   </div>
   <div class="tab-item" id="tabbar-controls" onclick="switchTab('controls')">
-    <div class="tab-icon">⚙</div><span>CONTROLS</span>
+    <div class="tab-icon">⚙</div><span>MODEL</span>
+  </div>
+  <div class="tab-item" id="tabbar-sculpt" onclick="switchTab('sculpt')">
+    <div class="tab-icon">◉</div><span>SCULPT</span>
   </div>
   <div class="tab-item" id="tabbar-ai" onclick="switchTab('ai')">
-    <div class="tab-icon">✦</div><span>AI CHAT</span>
+    <div class="tab-icon">✦</div><span>AI</span>
     <div class="tab-badge" id="ai-badge"></div>
   </div>
 </div>
 
-
-<!-- API KEY MODAL -->
 <div id="apikey-modal">
   <div class="modal-box">
     <h2>AI PROVIDER</h2>
-    <p>Choose your AI provider and enter the API key. Keys stay in memory only — never stored.</p>
+    <p>Choose provider and enter API key. Saved locally on this device.</p>
     <div class="provider-tabs">
       <div class="provider-tab active" id="tab-anthropic" onclick="selectProvider('anthropic')">CLAUDE</div>
       <div class="provider-tab" id="tab-grok" onclick="selectProvider('grok')">GROK</div>
     </div>
-    <div class="provider-hint" id="provider-hint">Anthropic Claude — console.anthropic.com</div>
+    <div class="provider-hint" id="provider-hint">Anthropic Claude</div>
     <input type="password" id="apikey-input" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
     <div class="modal-row">
       <button class="modal-btn" onclick="hideApiModal()">SKIP</button>
-      <button class="modal-btn primary" onclick="saveApiKey()">SAVE KEY</button>
+      <button class="modal-btn primary" onclick="saveApiKey()">SAVE</button>
     </div>
-    <div class="modal-note" id="modal-note">Get your Anthropic key at console.anthropic.com → API Keys</div>
     <div style="margin-top:10px;display:flex;gap:8px;">
-      <a id="get-key-link" href="https://console.anthropic.com/settings/keys" target="_blank" style="flex:1;padding:8px 4px;border:1px solid var(--accent);color:var(--accent);font-family:'Space Mono',monospace;font-size:9px;text-align:center;text-decoration:none;letter-spacing:1px;touch-action:manipulation;">⬡ GET FREE KEY</a>
-      <a id="get-grok-link" href="https://console.x.ai" target="_blank" style="flex:1;padding:8px 4px;border:1px solid var(--border);color:var(--dim);font-family:'Space Mono',monospace;font-size:9px;text-align:center;text-decoration:none;letter-spacing:1px;touch-action:manipulation;display:none;">⬡ GET FREE KEY</a>
+      <a id="get-key-link" href="https://console.anthropic.com/settings/keys" target="_blank" style="flex:1;padding:8px 4px;border:1px solid var(--accent);color:var(--accent);font-family:'Space Mono',monospace;font-size:9px;text-align:center;text-decoration:none;letter-spacing:1px">⬡ GET FREE KEY</a>
+      <a id="get-grok-link" href="https://console.x.ai" target="_blank" style="flex:1;padding:8px 4px;border:1px solid var(--border);color:var(--dim);font-family:'Space Mono',monospace;font-size:9px;text-align:center;text-decoration:none;letter-spacing:1px;display:none">⬡ GET FREE KEY</a>
     </div>
-    <div style="margin-top:8px;font-size:10px;color:var(--dim);font-family:'Space Mono',monospace;">Key is saved locally on this device. <span onclick="clearSavedKey();hideApiModal();" style="color:var(--danger);cursor:pointer;text-decoration:underline;">Clear saved key</span></div>
+    <div class="modal-note">Key saved locally. <span onclick="clearSavedKey();hideApiModal();" style="color:var(--danger);cursor:pointer;text-decoration:underline">Clear saved key</span></div>
   </div>
 </div>
 
 <div id="loading"><div class="spinner"></div><p id="loading-text">LOADING...</p></div>
 <div id="toast"></div>
+
+<style>
+.xyz-in{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--text);font-family:'Space Mono',monospace;font-size:11px;padding:7px 4px;text-align:center;outline:none;-webkit-appearance:none;border-radius:0;}
+.xyz-in:focus{border-color:var(--accent);}
+.xyz-l{font-size:9px;color:var(--dim);text-align:center;margin-top:2px;font-family:'Space Mono',monospace;}
+</style>
 
 <script>/**
  * @license
@@ -4650,6 +4625,872 @@ document.getElementById('apikey-input').addEventListener('keydown', e => { if(e.
 	THREE.GLTFLoader = GLTFLoader;
 
 } )();
+</script>
+<script>
+// ══════════════════════════════════════════════
+// TAB SWITCHING
+// ══════════════════════════════════════════════
+let activeTab = 'view';
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('tabbar-' + tab).classList.add('active');
+  if (tab === 'ai') document.getElementById('ai-badge').classList.remove('show');
+  if (tab === 'view') setTimeout(resize, 50);
+}
+function toggleSec(h) { h.closest('.sec').classList.toggle('open'); }
+
+// ══════════════════════════════════════════════
+// THREE.JS SETUP
+// ══════════════════════════════════════════════
+const canvas = document.getElementById('three-canvas');
+const tabView = document.getElementById('tab-view');
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+renderer.outputEncoding = THREE.sRGBEncoding;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x09101a);
+
+const camera = new THREE.PerspectiveCamera(45, 1, 0.001, 1000);
+camera.position.set(0, 1.5, 4);
+
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); scene.add(ambientLight);
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.5); dirLight.position.set(3, 5, 3); dirLight.castShadow = true; scene.add(dirLight);
+const fillLight = new THREE.DirectionalLight(0x4488ff, 0.4); fillLight.position.set(-3, 2, -3); scene.add(fillLight);
+
+const gridHelper = new THREE.GridHelper(10, 20, 0x1a2535, 0x1a2535); scene.add(gridHelper);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.ShadowMaterial({ opacity: 0.2 }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+
+// Raycaster
+const raycaster = new THREE.Raycaster();
+
+// ══════════════════════════════════════════════
+// CAMERA ORBIT
+// ══════════════════════════════════════════════
+let orbit = { theta: 0, phi: Math.PI / 3, radius: 3.5, target: new THREE.Vector3(0, 0.9, 0) };
+let camMode = 'orbit';
+
+function updateCamera() {
+  camera.position.x = orbit.target.x + orbit.radius * Math.sin(orbit.phi) * Math.sin(orbit.theta);
+  camera.position.y = orbit.target.y + orbit.radius * Math.cos(orbit.phi);
+  camera.position.z = orbit.target.z + orbit.radius * Math.sin(orbit.phi) * Math.cos(orbit.theta);
+  camera.lookAt(orbit.target);
+}
+updateCamera();
+
+function setCamMode(m) {
+  camMode = m;
+  document.getElementById('ctool-orbit').classList.toggle('active', m === 'orbit');
+  document.getElementById('ctool-pan').classList.toggle('active', m === 'pan');
+}
+
+function resize() {
+  const w = tabView.clientWidth || window.innerWidth;
+  const h = tabView.clientHeight || (window.innerHeight - 48 - 60);
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+resize();
+window.addEventListener('resize', resize);
+
+function animate() { requestAnimationFrame(animate); renderer.render(scene, camera); }
+animate();
+
+// ══════════════════════════════════════════════
+// SCULPT STATE
+// ══════════════════════════════════════════════
+let sculptMode = 'view'; // view|push|pull|smooth|inflate|grab
+let brushSize = 60;
+let brushStrength = 0.06;
+let brushFalloff = 0.7;
+
+// Per-mesh vertex history for undo
+let undoStack = []; // [{mesh, positions: Float32Array}]
+
+// Wireframe overlay meshes
+let wireMeshes = new Map();
+let wireVisible = false;
+
+function setSculptMode(m) {
+  sculptMode = m;
+  document.querySelectorAll('.stool').forEach(b => b.classList.remove('active'));
+  const el = document.getElementById('stool-' + m);
+  if (el) el.classList.add('active');
+  const isActive = m !== 'view';
+  document.getElementById('brush-hud').style.display = isActive ? 'flex' : 'none';
+  canvas.style.cursor = isActive ? 'crosshair' : 'grab';
+  showInfo(isActive ? m.toUpperCase() + ' — drag on mesh to sculpt' : '');
+}
+
+function showInfo(text, ms = 2000) {
+  const h = document.getElementById('info-hud');
+  h.textContent = text;
+  h.classList.toggle('show', !!text);
+  clearTimeout(h._t);
+  if (text && ms) h._t = setTimeout(() => h.classList.remove('show'), ms);
+}
+
+// ══════════════════════════════════════════════
+// VERTEX DEFORMATION ENGINE
+// ══════════════════════════════════════════════
+function getCanvasPos(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  return new THREE.Vector2(
+    ((clientX - rect.left) / rect.width) * 2 - 1,
+    -((clientY - rect.top) / rect.height) * 2 + 1
+  );
+}
+
+function getSculptMeshes() {
+  const out = [];
+  if (!activeModel) return out;
+  activeModel.traverse(n => {
+    if (n.isMesh && n.geometry && n.geometry.attributes.position) {
+      if (selectedMesh && n !== selectedMesh) return;
+      out.push(n);
+    }
+  });
+  return out;
+}
+
+// Save undo snapshot for a mesh
+function snapshotMesh(mesh) {
+  const pos = mesh.geometry.attributes.position;
+  undoStack.push({ mesh, data: pos.array.slice() });
+  if (undoStack.length > 30) undoStack.shift();
+}
+
+function undoDeform() {
+  if (!undoStack.length) { toast('Nothing to undo'); return; }
+  const { mesh, data } = undoStack.pop();
+  const pos = mesh.geometry.attributes.position;
+  pos.array.set(data);
+  pos.needsUpdate = true;
+  mesh.geometry.computeVertexNormals();
+  updateWireframe(mesh);
+  toast('Undo applied');
+}
+
+// Core sculpt: apply brush at screen position
+let grabStartWorld = null;
+let grabAffected = null; // [{mesh,i,origPos,weight}]
+
+function applySculpt(clientX, clientY, isDrag) {
+  if (sculptMode === 'view' || !activeModel) return;
+
+  const ndc = getCanvasPos(clientX, clientY);
+  raycaster.setFromCamera(ndc, camera);
+
+  const meshes = getSculptMeshes();
+  const hits = raycaster.intersectObjects(meshes, false);
+  if (!hits.length) return;
+
+  const hit = hits[0];
+  const mesh = hit.object;
+  const hitWorld = hit.point.clone();
+
+  // Compute brush radius in world units
+  const screenPx = brushSize;
+  const dist = camera.position.distanceTo(hitWorld);
+  const fov = camera.fov * Math.PI / 180;
+  const worldRadius = (screenPx / canvas.clientHeight) * 2 * dist * Math.tan(fov / 2);
+
+  if (sculptMode === 'grab') {
+    if (!isDrag) {
+      // start grab — collect vertices
+      grabStartWorld = hitWorld.clone();
+      grabAffected = [];
+      snapshotMesh(mesh);
+      const posAttr = mesh.geometry.attributes.position;
+      const mat = mesh.matrixWorld;
+      for (let i = 0; i < posAttr.count; i++) {
+        const v = new THREE.Vector3().fromBufferAttribute(posAttr, i).applyMatrix4(mat);
+        const d = v.distanceTo(hitWorld);
+        if (d < worldRadius) {
+          const w = gaussianFalloff(d / worldRadius);
+          grabAffected.push({ mesh, i, w });
+        }
+      }
+    }
+    return; // actual movement done in mousemove for grab
+  }
+
+  // For brush tools: snapshot once per touch
+  if (!isDrag) snapshotMesh(mesh);
+
+  const posAttr = mesh.geometry.attributes.position;
+  const matWorld = mesh.matrixWorld;
+  const matWorldInv = new THREE.Matrix4().copy(matWorld).invert();
+
+  // Get hit normal in world space
+  const normal = hit.face.normal.clone().transformDirection(matWorld).normalize();
+
+  for (let i = 0; i < posAttr.count; i++) {
+    const v = new THREE.Vector3().fromBufferAttribute(posAttr, i);
+    const vWorld = v.clone().applyMatrix4(matWorld);
+    const d = vWorld.distanceTo(hitWorld);
+
+    if (d > worldRadius) continue;
+    const t = d / worldRadius;
+    const weight = gaussianFalloff(t) * brushStrength;
+
+    let delta = new THREE.Vector3();
+
+    if (sculptMode === 'push') {
+      delta.copy(normal).multiplyScalar(weight);
+    } else if (sculptMode === 'pull') {
+      delta.copy(normal).multiplyScalar(-weight);
+    } else if (sculptMode === 'inflate') {
+      // Move along vertex normal
+      const vn = new THREE.Vector3().fromBufferAttribute(mesh.geometry.attributes.normal || posAttr, i).normalize();
+      delta.copy(vn).multiplyScalar(weight);
+    } else if (sculptMode === 'smooth') {
+      // Average toward center of neighbors (simplified — move toward hit point)
+      const toCenter = hitWorld.clone().sub(vWorld).normalize();
+      delta.copy(toCenter).multiplyScalar(weight * 0.5);
+    }
+
+    // Convert delta back to local space
+    const deltaLocal = delta.clone().transformDirection(matWorldInv);
+    posAttr.setXYZ(i, v.x + deltaLocal.x, v.y + deltaLocal.y, v.z + deltaLocal.z);
+  }
+
+  posAttr.needsUpdate = true;
+  mesh.geometry.computeVertexNormals();
+  updateWireframe(mesh);
+}
+
+function applyGrabDrag(clientX, clientY, prevX, prevY) {
+  if (!grabAffected || !grabAffected.length) return;
+  const ndc = getCanvasPos(clientX, clientY);
+  const ndcPrev = getCanvasPos(prevX, prevY);
+  raycaster.setFromCamera(ndc, camera);
+
+  // Project movement onto a plane facing the camera
+  const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(
+    camera.getWorldDirection(new THREE.Vector3()),
+    grabStartWorld
+  );
+  const curr = new THREE.Vector3();
+  const prev = new THREE.Vector3();
+  raycaster.ray.intersectPlane(plane, curr);
+  const rPrev = new THREE.Raycaster(); rPrev.setFromCamera(ndcPrev, camera);
+  rPrev.ray.intersectPlane(plane, prev);
+  if (!curr || !prev) return;
+  const delta = curr.clone().sub(prev);
+
+  grabAffected.forEach(({ mesh, i, w }) => {
+    const posAttr = mesh.geometry.attributes.position;
+    const matInv = new THREE.Matrix4().copy(mesh.matrixWorld).invert();
+    const deltaLocal = delta.clone().transformDirection(matInv).multiplyScalar(w);
+    const v = new THREE.Vector3().fromBufferAttribute(posAttr, i);
+    posAttr.setXYZ(i, v.x + deltaLocal.x, v.y + deltaLocal.y, v.z + deltaLocal.z);
+  });
+
+  grabAffected[0] && grabAffected[0].mesh.geometry.attributes.position.needsUpdate = true;
+  grabAffected[0] && grabAffected[0].mesh.geometry.computeVertexNormals();
+  grabAffected[0] && updateWireframe(grabAffected[0].mesh);
+}
+
+function gaussianFalloff(t) {
+  // t = 0..1, returns 1 at center, 0 at edge
+  return Math.max(0, 1 - Math.pow(t, brushFalloff * 2 + 0.5));
+}
+
+// ══════════════════════════════════════════════
+// BODY REGION SLIDERS
+// ══════════════════════════════════════════════
+// Regions: center Y range + horizontal expand on X/Z axes
+const BODY_REGIONS = [
+  { id: 'bust',       label: 'BUST',       color: '#ff6b9d', yMin: 0.55, yMax: 0.85, axes: 'xz', desc: 'Chest area' },
+  { id: 'waist',      label: 'WAIST',      color: '#00e5ff', yMin: 0.35, yMax: 0.55, axes: 'xz', desc: 'Midsection' },
+  { id: 'hips',       label: 'HIPS',       color: '#a855f7', yMin: 0.15, yMax: 0.38, axes: 'xz', desc: 'Hip area' },
+  { id: 'shoulders',  label: 'SHOULDERS',  color: '#f59e0b', yMin: 0.78, yMax: 1.0,  axes: 'x',  desc: 'Shoulder width' },
+  { id: 'thighs',     label: 'THIGHS',     color: '#10b981', yMin: 0.0,  yMax: 0.18, axes: 'xz', desc: 'Upper legs' },
+  { id: 'chest_depth',label: 'CHEST DEPTH',color: '#ff6b9d', yMin: 0.55, yMax: 0.85, axes: 'z',  desc: 'Front-back depth' },
+  { id: 'height',     label: 'HEIGHT',     color: '#7a8fa8', yMin: -99,  yMax: 99,   axes: 'y',  desc: 'Overall height' },
+  { id: 'overall',    label: 'OVERALL',    color: '#00e5ff', yMin: -99,  yMax: 99,   axes: 'xyz',desc: 'Full body scale' },
+];
+
+let regionSliderValues = {}; // regionId -> value (-1..1)
+let originalPositions = new Map(); // mesh.uuid -> Float32Array of original positions
+
+function buildBodySliders() {
+  const container = document.getElementById('body-sliders');
+  container.innerHTML = '';
+
+  BODY_REGIONS.forEach(region => {
+    regionSliderValues[region.id] = 0;
+    const div = document.createElement('div');
+    div.className = 'body-region';
+    div.innerHTML = `
+      <div class="rname"><div class="rdot" style="background:${region.color}"></div>${region.label} <span style="font-size:8px;color:var(--dim);font-family:'DM Sans',sans-serif">${region.desc}</span></div>
+      <div class="slider-row">
+        <label>SIZE</label>
+        <input type="range" min="-100" max="100" value="0" step="1"
+          oninput="applyRegionDeform('${region.id}',this.value/100);document.getElementById('rv-${region.id}').textContent=(this.value>0?'+':'')+this.value+'%'">
+        <span class="val" id="rv-${region.id}" style="color:${region.color}">0%</span>
+      </div>
+      <button class="reset-btn" onclick="resetRegion('${region.id}')">RESET</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function applyRegionDeform(regionId, newVal) {
+  if (!activeModel) return;
+  const region = BODY_REGIONS.find(r => r.id === regionId);
+  if (!region) return;
+
+  const prevVal = regionSliderValues[regionId] || 0;
+  regionSliderValues[regionId] = newVal;
+
+  activeModel.traverse(mesh => {
+    if (!mesh.isMesh || !mesh.geometry?.attributes?.position) return;
+
+    // Restore originals first
+    let orig = originalPositions.get(mesh.uuid);
+    if (!orig) {
+      orig = mesh.geometry.attributes.position.array.slice();
+      originalPositions.set(mesh.uuid, orig);
+    }
+
+    const posAttr = mesh.geometry.attributes.position;
+    const arr = posAttr.array;
+
+    // Get bounding box in local space to normalize Y
+    const box = new THREE.Box3().setFromBufferAttribute(posAttr);
+    const size = box.getSize(new THREE.Vector3());
+    const min = box.min;
+
+    for (let i = 0; i < posAttr.count; i++) {
+      const ox = orig[i * 3];
+      const oy = orig[i * 3 + 1];
+      const oz = orig[i * 3 + 2];
+
+      // Current accumulated offsets from ALL regions
+      let fx = ox, fy = oy, fz = oz;
+
+      // Apply all active regions cumulatively
+      BODY_REGIONS.forEach(r => {
+        const v = regionSliderValues[r.id] || 0;
+        if (Math.abs(v) < 0.001) return;
+        const yn = size.y > 0 ? (oy - min.y) / size.y : 0.5;
+        if (yn < r.yMin || yn > r.yMax) return;
+
+        // Blend weight — full in middle, falloff at edges
+        const norm = (yn - r.yMin) / (r.yMax - r.yMin);
+        const w = Math.sin(norm * Math.PI); // smooth bell curve
+
+        const factor = v * w;
+        const cx = (box.min.x + box.max.x) / 2;
+        const cz = (box.min.z + box.max.z) / 2;
+
+        if (r.axes.includes('x')) fx += (ox - cx) * factor * 0.8;
+        if (r.axes.includes('z')) fz += (oz - cz) * factor * 0.8;
+        if (r.axes.includes('y')) fy += oy * factor * 0.3;
+      });
+
+      arr[i * 3] = fx;
+      arr[i * 3 + 1] = fy;
+      arr[i * 3 + 2] = fz;
+    }
+
+    posAttr.needsUpdate = true;
+    mesh.geometry.computeVertexNormals();
+    updateWireframe(mesh);
+  });
+}
+
+function resetRegion(regionId) {
+  regionSliderValues[regionId] = 0;
+  // Find slider and reset
+  const slider = document.querySelector(`input[oninput*="'${regionId}'"]`);
+  if (slider) { slider.value = 0; document.getElementById('rv-' + regionId).textContent = '0%'; }
+  // Recompute all other regions
+  reapplyAllRegions();
+}
+
+function reapplyAllRegions() {
+  BODY_REGIONS.forEach(r => {
+    if (Math.abs(regionSliderValues[r.id] || 0) > 0.001) {
+      applyRegionDeform(r.id, regionSliderValues[r.id]);
+    }
+  });
+  // If all zero, restore originals
+  if (Object.values(regionSliderValues).every(v => Math.abs(v) < 0.001)) {
+    restoreOriginals();
+  }
+}
+
+function restoreOriginals() {
+  if (!activeModel) return;
+  activeModel.traverse(mesh => {
+    if (!mesh.isMesh || !mesh.geometry?.attributes?.position) return;
+    const orig = originalPositions.get(mesh.uuid);
+    if (!orig) return;
+    mesh.geometry.attributes.position.array.set(orig);
+    mesh.geometry.attributes.position.needsUpdate = true;
+    mesh.geometry.computeVertexNormals();
+    updateWireframe(mesh);
+  });
+}
+
+function resetAllDeforms() {
+  BODY_REGIONS.forEach(r => { regionSliderValues[r.id] = 0; });
+  document.querySelectorAll('input[type=range]').forEach(s => {
+    if (s.oninput && s.oninput.toString().includes('applyRegionDeform')) s.value = 0;
+  });
+  document.querySelectorAll('[id^="rv-"]').forEach(el => el.textContent = '0%');
+  undoStack = [];
+  restoreOriginals();
+  toast('All deforms reset');
+}
+
+// ══════════════════════════════════════════════
+// WIREFRAME OVERLAY
+// ══════════════════════════════════════════════
+function buildWireframes() {
+  if (!activeModel) return;
+  // Remove old
+  wireMeshes.forEach(w => scene.remove(w));
+  wireMeshes.clear();
+
+  activeModel.traverse(mesh => {
+    if (!mesh.isMesh) return;
+    const geo = new THREE.WireframeGeometry(mesh.geometry);
+    const wire = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: 0x00e5ff, opacity: 0.35, transparent: true }));
+    wire.visible = wireVisible;
+    mesh.add(wire);
+    wireMeshes.set(mesh.uuid, wire);
+  });
+}
+
+function updateWireframe(mesh) {
+  const wire = wireMeshes.get(mesh.uuid);
+  if (!wire) return;
+  wire.geometry.dispose();
+  wire.geometry = new THREE.WireframeGeometry(mesh.geometry);
+}
+
+function toggleWireframe() {
+  wireVisible = !wireVisible;
+  wireMeshes.forEach(w => w.visible = wireVisible);
+  document.getElementById('btn-wire').classList.toggle('active', wireVisible);
+}
+
+// ══════════════════════════════════════════════
+// MODEL LOADING
+// ══════════════════════════════════════════════
+let models = [], activeModel = null, selectedMesh = null;
+let renderMode = 'solid';
+let originalMaterials = new Map();
+let currentTint = '#ffffff';
+
+function loadFile(e) { const f = e.target.files[0]; if (f) loadGLB(f); e.target.value = ''; }
+
+async function loadGLB(file) {
+  showLoading('LOADING...');
+  try { await importGLTF(URL.createObjectURL(file), file.name, file.size); }
+  catch (err) { hideLoading(); toast('Failed: ' + err.message, true); }
+}
+
+function importGLTF(url, name, size) {
+  return new Promise((res, rej) => {
+    if (!window.THREE.GLTFLoader) { hideLoading(); createTestModel(name); res(); return; }
+    new THREE.GLTFLoader().load(url, gltf => {
+      const model = gltf.scene; model.name = name; scene.add(model);
+      const box = new THREE.Box3().setFromObject(model);
+      const center = box.getCenter(new THREE.Vector3()), sz = box.getSize(new THREE.Vector3());
+      const sc = 2 / Math.max(sz.x, sz.y, sz.z);
+      model.scale.setScalar(sc);
+      model.position.sub(center.multiplyScalar(sc));
+      model.position.y = 0;
+      model.traverse(n => {
+        if (n.isMesh) {
+          n.castShadow = true; n.receiveShadow = true;
+          originalMaterials.set(n.uuid, n.material.clone ? n.material.clone() : n.material);
+        }
+      });
+      finishLoad(model, name, size); res();
+    }, undefined, rej);
+  });
+}
+
+function createTestModel(name) {
+  const g = new THREE.Group(); g.name = name || 'Demo Avatar';
+  const mat = new THREE.MeshStandardMaterial({ color: 0x8899aa, metalness: 0.3, roughness: 0.6 });
+  const add = (geo, x, y, z) => {
+    const m = new THREE.Mesh(geo, mat.clone());
+    m.position.set(x, y, z); m.castShadow = true;
+    originalMaterials.set(m.uuid, m.material.clone());
+    g.add(m);
+  };
+  add(new THREE.SphereGeometry(0.22, 32, 32), 0, 1.55, 0);
+  // Torso with more verts for deformation
+  add(new THREE.CylinderGeometry(0.22, 0.18, 0.55, 32, 16), 0, 0.92, 0);
+  add(new THREE.CylinderGeometry(0.07, 0.06, 0.5, 16, 8), -0.36, 0.95, 0);
+  add(new THREE.CylinderGeometry(0.07, 0.06, 0.5, 16, 8), 0.36, 0.95, 0);
+  add(new THREE.CylinderGeometry(0.09, 0.07, 0.55, 16, 8), -0.13, 0.33, 0);
+  add(new THREE.CylinderGeometry(0.09, 0.07, 0.55, 16, 8), 0.13, 0.33, 0);
+  scene.add(g);
+  finishLoad(g, g.name, 0);
+  toast('Demo avatar — load a real GLB for best results');
+}
+
+function finishLoad(model, name, size) {
+  models.push(model);
+  activeModel = model;
+  originalPositions.clear();
+  undoStack = [];
+  Object.keys(regionSliderValues).forEach(k => regionSliderValues[k] = 0);
+
+  // Build wireframes
+  buildWireframes();
+
+  // Build mesh list
+  buildMeshList(model);
+
+  // Build body sliders
+  buildBodySliders();
+
+  // Model list
+  const list = document.getElementById('model-list');
+  list.innerHTML = '';
+  const sz = size > 1024 * 1024 ? (size / 1024 / 1024).toFixed(1) + 'MB' : size ? (size / 1024).toFixed(0) + 'KB' : '';
+  list.innerHTML = `<div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--accent)">${name} <span style="color:var(--dim)">${sz}</span></div>`;
+
+  fitCamera(); countTris();
+  hideLoading();
+  document.getElementById('drop-prompt').style.display = 'none';
+  toast('Loaded: ' + name);
+
+  // Sync transform UI
+  ['x','y','z'].forEach(a => {
+    document.getElementById('pos-'+a).value = model.position[a].toFixed(2);
+    document.getElementById('rot-'+a).value = (model.rotation[a]*180/Math.PI).toFixed(1);
+    document.getElementById('scale-'+a).value = model.scale[a].toFixed(2);
+  });
+  document.getElementById('status-text').textContent = name.length > 14 ? name.slice(0,13)+'…' : name;
+}
+
+function buildMeshList(model) {
+  const list = document.getElementById('mesh-list');
+  list.innerHTML = '';
+  let idx = 0;
+  model.traverse(n => {
+    if (!n.isMesh) return;
+    const item = document.createElement('div');
+    item.className = 'mesh-item' + (idx === 0 ? ' active' : '');
+    item.dataset.uuid = n.uuid;
+    const nm = n.name || ('Mesh ' + idx);
+    item.innerHTML = `<div class="mesh-dot"></div><span class="mesh-name">${nm}</span>`;
+    item.onclick = () => {
+      document.querySelectorAll('.mesh-item').forEach(el => el.classList.remove('active'));
+      item.classList.add('active');
+      selectedMesh = item.classList.contains('active') && selectedMesh === n ? null : n;
+      toast(selectedMesh ? 'Sculpting: ' + nm : 'All meshes');
+    };
+    list.appendChild(item);
+    if (idx === 0) selectedMesh = null; // default: all meshes
+    idx++;
+  });
+  if (!idx) list.innerHTML = '<p style="font-size:11px;color:var(--dim)">No meshes found</p>';
+}
+
+// ══════════════════════════════════════════════
+// MATERIAL & RENDER
+// ══════════════════════════════════════════════
+function setRenderMode(mode, btn) {
+  renderMode = mode;
+  document.querySelectorAll('.active-mode').forEach(b => { b.classList.remove('active-mode'); b.style.color = ''; b.style.borderColor = ''; });
+  if (btn) { btn.classList.add('active-mode'); btn.style.color = 'var(--accent)'; btn.style.borderColor = 'var(--accent)'; }
+  if (!activeModel) return;
+  activeModel.traverse(n => {
+    if (!n.isMesh) return;
+    const orig = originalMaterials.get(n.uuid);
+    switch (mode) {
+      case 'solid': n.material = orig ? orig.clone() : new THREE.MeshStandardMaterial(); n.material.wireframe = false; break;
+      case 'wire': n.material = new THREE.MeshBasicMaterial({ color: 0x00e5ff, wireframe: true }); break;
+      case 'normal': n.material = new THREE.MeshNormalMaterial(); break;
+      case 'depth': n.material = new THREE.MeshDepthMaterial(); break;
+      case 'xray': n.material = new THREE.MeshBasicMaterial({ color: 0x00e5ff, wireframe: true, transparent: true, opacity: 0.3 }); break;
+      case 'flat': n.material = orig ? orig.clone() : new THREE.MeshStandardMaterial(); n.material.flatShading = true; n.material.needsUpdate = true; break;
+    }
+    if (currentTint !== '#ffffff' && mode === 'solid') { n.material.color = new THREE.Color(currentTint); n.material.needsUpdate = true; }
+  });
+}
+
+function setTint(hex, sw) {
+  currentTint = hex;
+  document.querySelectorAll('#tint-swatches div').forEach(s => s.style.outline = '');
+  if (sw) sw.style.outline = '2px solid white';
+  if (!activeModel) return;
+  activeModel.traverse(n => { if (n.isMesh && n.material?.color) { n.material.color = new THREE.Color(hex); n.material.needsUpdate = true; } });
+}
+
+function setOpacity(val) {
+  if (!activeModel) return;
+  activeModel.traverse(n => { if (n.isMesh && n.material) { n.material.transparent = val < 1; n.material.opacity = +val; n.material.needsUpdate = true; } });
+}
+
+// ══════════════════════════════════════════════
+// TRANSFORM
+// ══════════════════════════════════════════════
+function applyTransform() {
+  if (!activeModel) return;
+  activeModel.position.set(+document.getElementById('pos-x').value||0, +document.getElementById('pos-y').value||0, +document.getElementById('pos-z').value||0);
+  activeModel.rotation.set((+document.getElementById('rot-x').value||0)*Math.PI/180, (+document.getElementById('rot-y').value||0)*Math.PI/180, (+document.getElementById('rot-z').value||0)*Math.PI/180);
+  activeModel.scale.set(+document.getElementById('scale-x').value||1, +document.getElementById('scale-y').value||1, +document.getElementById('scale-z').value||1);
+}
+
+// ══════════════════════════════════════════════
+// CAMERA UTILS
+// ══════════════════════════════════════════════
+function fitCamera() {
+  if (!activeModel) return;
+  const box = new THREE.Box3().setFromObject(activeModel);
+  orbit.target.copy(box.getCenter(new THREE.Vector3()));
+  orbit.radius = Math.max(box.getSize(new THREE.Vector3()).length(), 1) * 1.7;
+  updateCamera();
+}
+function resetCamera() { orbit = { theta:0, phi:Math.PI/3, radius:3.5, target:new THREE.Vector3(0,0.9,0) }; updateCamera(); }
+function toggleGrid() { gridHelper.visible = !gridHelper.visible; document.getElementById('btn-grid').classList.toggle('active', gridHelper.visible); }
+function countTris() {
+  let t = 0;
+  scene.traverse(n => { if (n.isMesh && n.geometry) t += (n.geometry.index ? n.geometry.index.count : n.geometry.attributes.position.count) / 3 | 0; });
+  document.getElementById('poly-count').textContent = t ? t.toLocaleString() + ' TRI' : '';
+}
+function takeScreenshot() {
+  renderer.render(scene, camera);
+  canvas.toBlob(blob => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'avatar_' + Date.now() + '.png'; a.click(); }, 'image/png');
+  toast('Screenshot saved');
+}
+
+// ══════════════════════════════════════════════
+// BRUSH RING INDICATOR
+// ══════════════════════════════════════════════
+const brushRing = document.getElementById('brush-ring');
+function moveBrushRing(x, y) {
+  if (sculptMode === 'view') { brushRing.style.display = 'none'; return; }
+  brushRing.style.display = 'block';
+  brushRing.style.left = x + 'px';
+  brushRing.style.top = y + 'px';
+  brushRing.style.width = brushSize * 2 + 'px';
+  brushRing.style.height = brushSize * 2 + 'px';
+}
+
+// ══════════════════════════════════════════════
+// INPUT HANDLING
+// ══════════════════════════════════════════════
+let md = { down: false, btn: 0, x: 0, y: 0, sculpting: false };
+
+canvas.addEventListener('mousedown', e => {
+  md.down = true; md.btn = e.button; md.x = e.clientX; md.y = e.clientY;
+  md.sculpting = sculptMode !== 'view' && e.button === 0;
+  if (md.sculpting) { applySculpt(e.clientX, e.clientY, false); }
+  e.preventDefault();
+});
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+window.addEventListener('mouseup', () => { md.down = false; md.sculpting = false; grabAffected = null; grabStartWorld = null; });
+window.addEventListener('mousemove', e => {
+  if (!md.down) { moveBrushRing(e.clientX, e.clientY); return; }
+  const dx = e.clientX - md.x, dy = e.clientY - md.y;
+  moveBrushRing(e.clientX, e.clientY);
+  if (md.sculpting) {
+    if (sculptMode === 'grab') applyGrabDrag(e.clientX, e.clientY, md.x, md.y);
+    else applySculpt(e.clientX, e.clientY, true);
+  } else {
+    if (md.btn === 0) { orbit.theta -= dx * 0.008; orbit.phi = Math.max(0.05, Math.min(Math.PI - 0.05, orbit.phi + dy * 0.008)); }
+    else { const r = new THREE.Vector3(); camera.getWorldDirection(r); r.cross(camera.up).normalize(); orbit.target.addScaledVector(r, -dx * 0.005); orbit.target.addScaledVector(new THREE.Vector3(0,1,0), dy * 0.005); }
+    updateCamera();
+  }
+  md.x = e.clientX; md.y = e.clientY;
+});
+canvas.addEventListener('wheel', e => { orbit.radius = Math.max(0.3, Math.min(50, orbit.radius + e.deltaY * 0.008)); updateCamera(); e.preventDefault(); }, { passive: false });
+
+// TOUCH
+let touches = {};
+canvas.addEventListener('touchstart', e => {
+  for (const t of e.touches) touches[t.identifier] = { x: t.clientX, y: t.clientY };
+  if (e.touches.length === 1 && sculptMode !== 'view') {
+    applySculpt(e.touches[0].clientX, e.touches[0].clientY, false);
+  }
+  e.preventDefault();
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  if (e.touches.length === 1) {
+    const t = e.touches[0], p = touches[t.identifier];
+    if (p) {
+      if (sculptMode !== 'view') {
+        if (sculptMode === 'grab') applyGrabDrag(t.clientX, t.clientY, p.x, p.y);
+        else applySculpt(t.clientX, t.clientY, true);
+      } else {
+        const dx = t.clientX - p.x, dy = t.clientY - p.y;
+        orbit.theta -= dx * 0.008; orbit.phi = Math.max(0.05, Math.min(Math.PI - 0.05, orbit.phi + dy * 0.008)); updateCamera();
+      }
+    }
+    touches[t.identifier] = { x: t.clientX, y: t.clientY };
+  } else if (e.touches.length === 2) {
+    const t0 = e.touches[0], t1 = e.touches[1], p0 = touches[t0.identifier], p1 = touches[t1.identifier];
+    if (p0 && p1) {
+      const pd = Math.hypot(p0.x - p1.x, p0.y - p1.y), cd = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
+      orbit.radius = Math.max(0.3, Math.min(50, orbit.radius * (pd / cd))); updateCamera();
+    }
+    touches[t0.identifier] = { x: t0.clientX, y: t0.clientY }; touches[t1.identifier] = { x: t1.clientX, y: t1.clientY };
+  }
+  e.preventDefault();
+}, { passive: false });
+canvas.addEventListener('touchend', e => { for (const t of e.changedTouches) delete touches[t.identifier]; grabAffected = null; grabStartWorld = null; });
+
+// Drag & Drop
+tabView.addEventListener('dragover', e => e.preventDefault());
+tabView.addEventListener('drop', e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f && (f.name.endsWith('.glb')||f.name.endsWith('.gltf'))) loadGLB(f); });
+
+// ══════════════════════════════════════════════
+// AI CHAT
+// ══════════════════════════════════════════════
+let chatHistory = [], isThinking = false;
+function chip(text) { document.getElementById('chat-input').value = text; switchTab('ai'); setTimeout(() => document.getElementById('chat-input').focus(), 100); }
+function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
+function addMsg(role, text) {
+  const msgs = document.getElementById('chat-msgs');
+  const div = document.createElement('div'); div.className = 'msg ' + (role === 'assistant' ? 'ai' : 'user');
+  div.innerHTML = `<div class="msg-label">${role === 'assistant' ? 'AVATARFORGE AI' : 'YOU'}</div><div class="msg-bubble">${text.replace(/\n/g,'<br>')}</div>`;
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+  if (role === 'assistant' && activeTab !== 'ai') document.getElementById('ai-badge').classList.add('show');
+}
+function addThinking() { const msgs = document.getElementById('chat-msgs'); const div = document.createElement('div'); div.id = 'thinking'; div.className = 'msg ai'; div.innerHTML = `<div class="msg-label">AI</div><div class="thinking"><span></span><span></span><span></span></div>`; msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight; }
+function removeThinking() { document.getElementById('thinking')?.remove(); }
+
+function getState() {
+  if (!activeModel) return 'No model loaded.';
+  const regionSummary = BODY_REGIONS.filter(r => Math.abs(regionSliderValues[r.id]||0) > 0.01).map(r => `${r.label}:${((regionSliderValues[r.id]||0)*100).toFixed(0)}%`).join(', ') || 'none';
+  return JSON.stringify({ model: activeModel.name, sculptMode, activeRegions: regionSummary });
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg || isThinking) return;
+  if (!apiKey) { showApiModal(); toast('Set API key first', true); return; }
+  input.value = ''; isThinking = true; document.getElementById('send-btn').disabled = true;
+  addMsg('user', msg); chatHistory.push({ role: 'user', content: msg }); addThinking();
+
+  const sys = `You are AvatarForge AI controlling a 3D avatar sculpting editor.
+State: ${getState()}
+
+Available body regions: bust, waist, hips, shoulders, thighs, chest_depth, height, overall
+Slider values: -1.0 (shrink) to 1.0 (grow)
+
+Reply in TWO parts:
+1. 1-2 sentence description
+2. JSON block: \`\`\`json { "regions": {"bust":0.4,"waist":-0.2}, "renderMode":"solid|wire|normal|flat|xray|depth", "tint":"#hex", "opacity":0.0-1.0, "metalness":0.0-1.0, "roughness":0.0-1.0, "emissive":"#hex", "emissive_intensity":0.0-3.0, "resetAll":true } \`\`\`
+Only include fields you want to change. Regions are cumulative with current values.`;
+
+  try {
+    let full = '';
+    if (aiProvider === 'anthropic') {
+      const res = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' }, body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 800, system: sys, messages: chatHistory.slice(-6) }) });
+      const data = await res.json(); if (data.error) throw new Error(data.error.message);
+      full = data.content?.map(b => b.text || '').join('') || '';
+    } else {
+      const res = await fetch('https://api.x.ai/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey }, body: JSON.stringify({ model: 'grok-3-mini', max_tokens: 800, messages: [{ role: 'system', content: sys }, ...chatHistory.slice(-6)] }) });
+      const data = await res.json(); if (data.error) throw new Error(data.error.message);
+      full = data.choices?.[0]?.message?.content || '';
+    }
+    removeThinking();
+    chatHistory.push({ role: 'assistant', content: full });
+    const jm = full.match(/```json\s*([\s\S]*?)```/);
+    addMsg('assistant', full.replace(/```json[\s\S]*?```/g, '').trim() || 'Changes applied.');
+    if (jm) { try { applyAIChanges(JSON.parse(jm[1])); } catch (e) { addMsg('assistant', '⚠ ' + e.message); } }
+  } catch (e) { removeThinking(); addMsg('assistant', '⚠ ' + e.message); chatHistory.pop(); }
+  isThinking = false; document.getElementById('send-btn').disabled = false;
+}
+
+function applyAIChanges(c) {
+  if (c.resetAll) resetAllDeforms();
+  if (c.regions) {
+    Object.entries(c.regions).forEach(([id, val]) => {
+      const clamped = Math.max(-1, Math.min(1, val));
+      regionSliderValues[id] = clamped;
+      const slider = document.querySelector(`input[oninput*="'${id}'"]`);
+      if (slider) { slider.value = clamped * 100; document.getElementById('rv-'+id).textContent = (clamped > 0 ? '+' : '') + Math.round(clamped*100) + '%'; }
+      applyRegionDeform(id, clamped);
+    });
+  }
+  if (c.renderMode) setRenderMode(c.renderMode);
+  if (c.tint) setTint(c.tint);
+  if (c.opacity !== undefined) setOpacity(c.opacity);
+  if (!activeModel) return;
+  if (c.metalness !== undefined || c.roughness !== undefined || c.emissive || c.emissive_intensity !== undefined) {
+    activeModel.traverse(n => {
+      if (!n.isMesh || !n.material) return;
+      if (c.metalness !== undefined && n.material.metalness !== undefined) n.material.metalness = c.metalness;
+      if (c.roughness !== undefined && n.material.roughness !== undefined) n.material.roughness = c.roughness;
+      if (c.emissive && n.material.emissive) n.material.emissive = new THREE.Color(c.emissive);
+      if (c.emissive_intensity !== undefined && n.material.emissiveIntensity !== undefined) n.material.emissiveIntensity = c.emissive_intensity;
+      n.material.needsUpdate = true;
+    });
+  }
+}
+
+// ══════════════════════════════════════════════
+// API KEY
+// ══════════════════════════════════════════════
+let apiKey = '', aiProvider = 'anthropic';
+const PROVIDERS = {
+  anthropic: { placeholder:'sk-ant-...', hint:'Anthropic Claude', label:'CLAUDE' },
+  grok:      { placeholder:'xai-...',    hint:'xAI Grok',         label:'GROK'  }
+};
+function selectProvider(p) {
+  aiProvider = p;
+  document.getElementById('apikey-input').placeholder = PROVIDERS[p].placeholder;
+  document.getElementById('apikey-input').value = apiKey || '';
+  document.getElementById('provider-hint').textContent = PROVIDERS[p].hint;
+  document.getElementById('tab-anthropic').classList.toggle('active', p==='anthropic');
+  document.getElementById('tab-grok').classList.toggle('active', p==='grok');
+  document.getElementById('get-key-link').style.display = p==='anthropic' ? '' : 'none';
+  document.getElementById('get-grok-link').style.display = p==='grok' ? '' : 'none';
+}
+function showApiModal() { document.getElementById('apikey-modal').classList.remove('hidden'); selectProvider(aiProvider); setTimeout(()=>document.getElementById('apikey-input').focus(),100); }
+function hideApiModal() { document.getElementById('apikey-modal').classList.add('hidden'); }
+function saveApiKey() {
+  const val = document.getElementById('apikey-input').value.trim();
+  if (!val) { toast('Enter an API key', true); return; }
+  apiKey = val;
+  try { localStorage.setItem('avatarforge_key', val); localStorage.setItem('avatarforge_provider', aiProvider); } catch(e) {}
+  document.getElementById('key-dot').classList.add('set');
+  hideApiModal(); toast(PROVIDERS[aiProvider].label + ' key saved');
+}
+function clearSavedKey() { try { localStorage.removeItem('avatarforge_key'); localStorage.removeItem('avatarforge_provider'); } catch(e) {} apiKey=''; aiProvider='anthropic'; document.getElementById('key-dot').classList.remove('set'); toast('Key cleared'); }
+document.getElementById('apikey-input').addEventListener('keydown', e => { if(e.key==='Enter') saveApiKey(); });
+(function loadSavedKey() {
+  try {
+    const k = localStorage.getItem('avatarforge_key'), p = localStorage.getItem('avatarforge_provider');
+    if (k) { apiKey=k; if(p&&PROVIDERS[p])aiProvider=p; document.getElementById('key-dot').classList.add('set'); return; }
+  } catch(e) {}
+  setTimeout(showApiModal, 700);
+})();
+
+// ══════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════
+function showLoading(t){document.getElementById('loading-text').textContent=t;document.getElementById('loading').classList.add('show');}
+function hideLoading(){document.getElementById('loading').classList.remove('show');}
+function toast(msg,isErr){const el=document.getElementById('toast');el.textContent=(isErr?'⚠ ':'✓ ')+msg;el.style.borderColor=isErr?'var(--danger)':'var(--accent)';el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2800);}
+
 </script>
 </body>
 </html>
